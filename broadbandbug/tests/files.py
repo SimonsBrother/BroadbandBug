@@ -1,9 +1,16 @@
+from datetime import datetime
+
 import broadbandbug.library.files as files
+import broadbandbug.library.constants as consts
+from broadbandbug.library.classes import Result
 
-files.makeFile("test.csv")
+test_path = "test.csv"
+files.makeFile(test_path)
 
 
+def test_writeResults():
+    files.writeResults(test_path, Result(1, 2, datetime.now().strftime(consts.TIME_FORMAT), consts.TYPE_SPEEDTESTCLI))
 
 
-def test_recordResults():
-    files.writeResults()
+def test_readResults():
+    print(files.readResults(test_path))

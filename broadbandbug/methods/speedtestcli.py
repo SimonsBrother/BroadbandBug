@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from broadbandbug.library.classes import Results
+from broadbandbug.library.classes import Result
 from broadbandbug.library.constants import TIME_FORMAT, TYPE_SPEEDTESTCLI
 
 import speedtest
@@ -18,7 +18,7 @@ def performSpeedTest(speedtest_obj, num_threads=None):
 
     :param speedtest_obj: a Speedtest object
     :param num_threads: the number of threads
-    :return: a Results object
+    :return: a Result object
     """
 
     speedtest_obj.get_best_server()
@@ -27,8 +27,8 @@ def performSpeedTest(speedtest_obj, num_threads=None):
 
     timestamp = datetime.now().strftime(TIME_FORMAT)
 
-    return Results(convertToMbs(speedtest_obj.results.download), convertToMbs(speedtest_obj.results.upload),
-                   timestamp, TYPE_SPEEDTESTCLI)
+    return Result(convertToMbs(speedtest_obj.results.download), convertToMbs(speedtest_obj.results.upload),
+                  timestamp, TYPE_SPEEDTESTCLI)
 
 
 if __name__ == "__main__":

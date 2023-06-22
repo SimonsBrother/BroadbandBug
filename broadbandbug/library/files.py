@@ -1,5 +1,7 @@
 import csv
 
+from broadbandbug.library.classes import Result
+
 
 # Checks whether the file specified exists, making it if it does not.
 def makeFile(path: str):
@@ -17,7 +19,7 @@ def writeResults(csv_path: str, results_obj):
     """
     Records results of a speed test to the csv file at the path specified. May raise any errors from open() statement.
     :param csv_path: path to the csv file
-    :param results_obj: the results to store, as a Results object
+    :param results_obj: the results to store, as a Result object
     """
 
     with open(csv_path, "a") as csv_file:
@@ -29,10 +31,25 @@ def readResults(csv_path: str):
     """
     Reads the results stored in the file at csv_path. May raise any errors from open() statement.
     :param csv_path: path to csv file to read from
-    :return: a list of results objects
+    :return: a dictionary of results objects, separating different types of bugs
     """
+
+    results_dict = {}
 
     with open(csv_path, "r") as csv_file:
         reader = csv.reader(csv_file)
+
+        # Unpack each row into Result object
         for row in reader:
-            print(row)
+            result = Result(*row)
+
+            # If the result type has not yet been encountered, make a new category
+            if result.bug_type not in results_dict.keys():
+                # Add the result to the new list when instantiating the new list
+                results_dict[result.bug_type] = [result]
+
+            # Otherwise, add the result to the relevant type
+            else:
+                results_dict[result.bug_type].append(result)
+
+    return results_dict

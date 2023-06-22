@@ -1,4 +1,4 @@
-class Results:
+class Result:
     """
     Stores the upload and download speed for easy access
     """
@@ -9,5 +9,5 @@ class Results:
         self.bug_type = bug_type
 
     def __repr__(self):
-        return f"Results(download={self.download}, upload={self.upload}," \
+        return f"Result(download={self.download}, upload={self.upload}," \
                f" timestamp={self.timestamp}, bug_type={self.bug_type})"
