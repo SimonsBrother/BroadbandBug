@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>324</width>
+    <height>242</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Broadband Bug</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <property name="usesScrollButtons">
+       <bool>false</bool>
+      </property>
+      <widget class="QWidget" name="recTab">
+       <attribute name="title">
+        <string>Recorders</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QPushButton" name="addRecBtn">
+          <property name="statusTip">
+           <string>Start a recorder</string>
+          </property>
+          <property name="text">
+           <string>Add recorder...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="runningRecLabel">
+          <property name="text">
+           <string>Running recorders:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QListView" name="runningRecListView">
+          <property name="statusTip">
+           <string>Showing running recorders</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="stopRecBtn">
+          <property name="statusTip">
+           <string>Stop the recorder selected from the list</string>
+          </property>
+          <property name="text">
+           <string>Stop selected recorder...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="graphTab">
+       <attribute name="title">
+        <string>Graph</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QPushButton" name="showGraphBtn">
+          <property name="statusTip">
+           <string>Open a window showing the graph</string>
+          </property>
+          <property name="text">
+           <string>Show graph...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="separateCheckBox">
+          <property name="statusTip">
+           <string>Plot data from different methods as separate lines</string>
+          </property>
+          <property name="text">
+           <string>Separate data by method (recommended)</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>63</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="changeColoursBtn">
+          <property name="statusTip">
+           <string>Change the colours of the graph lines</string>
+          </property>
+          <property name="text">
+           <string>Change graph colours...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
