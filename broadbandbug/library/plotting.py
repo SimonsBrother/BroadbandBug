@@ -1,5 +1,3 @@
-# todo modularise
-
 from datetime import datetime
 
 from broadbandbug.library.constants import TIME_FORMAT
@@ -8,25 +6,12 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as md
 
 
-# Converts date strings to a datetime - this is here for easy changing.
+# Converts date strings to a datetime - this is here for easy future changes
 def formatTimeForGraph(string):
     return datetime.strptime(string, TIME_FORMAT)
 
 
 yaxis_extension = 10  # How much to add to the y limit so that the line doesn't reach the top
-
-# Gets readings from file
-results_file = open("broadband_results.txt", "r")
-results = results_file.readlines()
-results_file.close()
-
-# Parses reading, by splitting each reading by the § character. This produces a list of the values
-# with download speed at index 0, upload at 1, and times in 2. The up/down speeds are type casted to float.
-# Times are converted.
-download_speeds = [float(result.split('§')[0]) for result in results]
-upload_speeds = [float(result.split('§')[1]) for result in results]
-datetimes = [formatTimeForGraph(result.split('§')[2].strip('\n')) for result in results]
-
 
 # Styling
 plt.style.use("seaborn-darkgrid")
@@ -36,16 +21,66 @@ ax.tick_params(labelcolor="orange")
 plt.gcf().autofmt_xdate()
 xfmt = md.DateFormatter('%H:%M:%S')
 ax.xaxis.set_major_formatter(xfmt)
-plt.ylim(0, max(download_speeds + upload_speeds) + yaxis_extension)
+plt.ylim(bottom=0)
 
 # Labels
 plt.xlabel("Time (hour:min)", color="white")
 plt.ylabel("Megabits/s", color="white")
 plt.title("Broadband Speed", color="white")
 
-# Plots
-plt.plot(datetimes, download_speeds, marker="x", label="Download", color="black", linewidth=2)
-plt.plot(datetimes, upload_speeds, marker="+", label="Upload", color="red", linewidth=1)
 
-plt.legend()
-plt.show()
+# Plots
+def methodPlot(graph, results_dict: dict, palettes: dict):
+    """
+    Plots each method as a separate line for upload and download
+    :param graph: matplotlib pyplot
+    :param results_dict: a dictionary that splits the results by method
+    :param palettes: a dictionary that splits, by method, the colors (in GraphPalette objects) to be used for each line
+    """
+    for bug_type in results_dict.keys():
+        # Get data needed for each graph
+        timestamps = [result.timestamp for result in results_dict[bug_type]]
+        download_speeds = [result.upload for result in results_dict[bug_type]]
+        upload_speeds = [result.download for result in results_dict[bug_type]]
+
+        # Plot download
+        graph.plot(timestamps, download_speeds, marker="x", label=f"{bug_type} Download",
+                   color=palettes[bug_type].download, linewidth=2)
+
+        # Plot upload
+        graph.plot(timestamps, upload_speeds, marker="+", label=f"{bug_type} Upload",
+                   color=palettes[bug_type].upload, linewidth=1)
+
+
+def singlePlot(graph, results_dict: dict, palette):
+    """
+    Plots a line for download and upload, as a single plot for all methods
+    :param graph: matplotlib pyplot
+    :param results_dict: a dictionary that splits the results by method
+    :param palette: GraphPalette object to be used for lines
+    """
+
+    # Initialise lists to store all the data
+    timestamps = []
+    download_speeds = []
+    upload_speeds = []
+
+    # Go through each method's results and add the needed data to lists
+    for bug_type in results_dict.keys():
+        # Get data needed for each graph
+        timestamps += [result.timestamp for result in results_dict[bug_type]]
+        download_speeds += [result.upload for result in results_dict[bug_type]]
+        upload_speeds += [result.download for result in results_dict[bug_type]]
+
+    # Plot download
+    graph.plot(timestamps, download_speeds, marker="x", label=f"Download",
+               color=palette.download, linewidth=2)
+
+    # Plot upload
+    graph.plot(timestamps, upload_speeds, marker="+", label=f"Upload",
+               color=palette.upload, linewidth=1)
+
+
+if __name__ == "__main__":
+    plt.legend()
+    plt.show()
