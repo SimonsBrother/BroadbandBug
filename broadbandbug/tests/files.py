@@ -9,7 +9,7 @@ files.makeFile(test_path)
 
 
 def test_writeResults():
-    files.writeResults(test_path, Result(1, 2, datetime.now().strftime(consts.TIME_FORMAT), consts.TYPE_SPEEDTESTCLI))
+    files.writeResults(test_path, Result(1, 2, datetime.now().strftime(consts.TIME_FORMAT), consts.METHOD_SPEEDTESTCLI))
 
 
 def test_readResults():

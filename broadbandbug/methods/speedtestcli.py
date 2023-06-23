@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from broadbandbug.library.classes import Result
-from broadbandbug.library.constants import TIME_FORMAT, TYPE_SPEEDTESTCLI
+from broadbandbug.library.constants import TIME_FORMAT, METHOD_SPEEDTESTCLI
 
 import speedtest
 
@@ -27,8 +27,8 @@ def performSpeedTest(speedtest_obj, num_threads=None):
 
     timestamp = datetime.now().strftime(TIME_FORMAT)
 
-    return Result(convertToMbs(speedtest_obj.results.download), convertToMbs(speedtest_obj.results.upload),
-                  timestamp, TYPE_SPEEDTESTCLI)
+    return Result(convertToMbs(speedtest_obj.results.download), convertToMbs(speedtest_obj.results.upload), timestamp,
+                  METHOD_SPEEDTESTCLI)
 
 
 if __name__ == "__main__":

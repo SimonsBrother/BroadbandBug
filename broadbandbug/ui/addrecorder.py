@@ -41,7 +41,6 @@ class Ui_AddRecorder(object):
         self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(AddRecorder)
-        self.buttonBox.accepted.connect(AddRecorder.accept) # type: ignore
         self.buttonBox.rejected.connect(AddRecorder.reject) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(AddRecorder)
 

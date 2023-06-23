@@ -11,22 +11,22 @@ def formatTimeForGraph(string):
     return datetime.strptime(string, TIME_FORMAT)
 
 
-yaxis_extension = 10  # How much to add to the y limit so that the line doesn't reach the top
+def styleGraph(graph):
+    yaxis_extension = 10  # How much to add to the y limit so that the line doesn't reach the top
 
-# Styling
-plt.style.use("seaborn-darkgrid")
-fig, ax = plt.subplots(facecolor="#0d0433")
-ax.tick_params(labelcolor="orange")
+    # Styling
+    graph.style.use("seaborn-darkgrid")
+    fig, ax = plt.subplots(facecolor="#0d0433")
+    ax.tick_params(labelcolor="orange")
 
-plt.gcf().autofmt_xdate()
-xfmt = md.DateFormatter('%H:%M:%S')
-ax.xaxis.set_major_formatter(xfmt)
-plt.ylim(bottom=0)
+    graph.gcf().autofmt_xdate()
+    xfmt = md.DateFormatter('%H:%M:%S')
+    ax.xaxis.set_major_formatter(xfmt)
 
-# Labels
-plt.xlabel("Time (hour:min)", color="white")
-plt.ylabel("Megabits/s", color="white")
-plt.title("Broadband Speed", color="white")
+    # Labels
+    graph.xlabel("Time (hour:min)", color="white")
+    graph.ylabel("Megabits/s", color="white")
+    graph.title("Broadband Speed", color="white")
 
 
 # Plots
@@ -39,9 +39,9 @@ def methodPlot(graph, results_dict: dict, palettes: dict):
     """
     for bug_type in results_dict.keys():
         # Get data needed for each graph
-        timestamps = [result.timestamp for result in results_dict[bug_type]]
-        download_speeds = [result.upload for result in results_dict[bug_type]]
-        upload_speeds = [result.download for result in results_dict[bug_type]]
+        timestamps = [formatTimeForGraph(result.timestamp) for result in results_dict[bug_type]]
+        download_speeds = [result.download for result in results_dict[bug_type]]
+        upload_speeds = [result.upload for result in results_dict[bug_type]]
 
         # Plot download
         graph.plot(timestamps, download_speeds, marker="x", label=f"{bug_type} Download",
@@ -68,9 +68,9 @@ def singlePlot(graph, results_dict: dict, palette):
     # Go through each method's results and add the needed data to lists
     for bug_type in results_dict.keys():
         # Get data needed for each graph
-        timestamps += [result.timestamp for result in results_dict[bug_type]]
-        download_speeds += [result.upload for result in results_dict[bug_type]]
-        upload_speeds += [result.download for result in results_dict[bug_type]]
+        timestamps += [formatTimeForGraph(result.timestamp) for result in results_dict[bug_type]]
+        download_speeds += [result.download for result in results_dict[bug_type]]
+        upload_speeds += [result.upload for result in results_dict[bug_type]]
 
     # Plot download
     graph.plot(timestamps, download_speeds, marker="x", label=f"Download",
@@ -82,5 +82,15 @@ def singlePlot(graph, results_dict: dict, palette):
 
 
 if __name__ == "__main__":
+    from broadbandbug.library.files import readResults
+    from broadbandbug.library.classes import GraphPalette
+    from broadbandbug.library.constants import METHOD_SPEEDTESTCLI
+
+    path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.csv"
+    graphPalettes = {METHOD_SPEEDTESTCLI: GraphPalette("orange", "grey")}
+
+    styleGraph(plt)
+    methodPlot(plt, readResults(path), graphPalettes)
+
     plt.legend()
     plt.show()

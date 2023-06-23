@@ -46,11 +46,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QListView" name="runningRecListView">
-          <property name="statusTip">
-           <string>Showing running recorders</string>
-          </property>
-         </widget>
+         <widget class="QListWidget" name="runningRecList"/>
         </item>
         <item>
          <widget class="QPushButton" name="stopRecBtn">

@@ -15,16 +15,16 @@ def makeFile(path: str):
         return False
 
 
-def writeResults(csv_path: str, results_obj):
+def writeResults(csv_path: str, result_obj):
     """
     Records results of a speed test to the csv file at the path specified. May raise any errors from open() statement.
     :param csv_path: path to the csv file
-    :param results_obj: the results to store, as a Result object
+    :param result_obj: the results to store, as a Result object
     """
 
     with open(csv_path, "a") as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow([results_obj.download, results_obj.upload, results_obj.timestamp, results_obj.bug_type])
+        writer.writerow([result_obj.download, result_obj.upload, result_obj.timestamp, result_obj.method])
 
 
 def readResults(csv_path: str):
@@ -44,12 +44,12 @@ def readResults(csv_path: str):
             result = Result(*row)
 
             # If the result type has not yet been encountered, make a new category
-            if result.bug_type not in results_dict.keys():
+            if result.method not in results_dict.keys():
                 # Add the result to the new list when instantiating the new list
-                results_dict[result.bug_type] = [result]
+                results_dict[result.method] = [result]
 
             # Otherwise, add the result to the relevant type
             else:
-                results_dict[result.bug_type].append(result)
+                results_dict[result.method].append(result)
 
     return results_dict
