@@ -1,4 +1,5 @@
 import csv
+import json
 
 from broadbandbug.library.classes import Result
 
@@ -18,7 +19,7 @@ def makeFile(path: str):
 def writeResults(csv_path: str, result_obj):
     """
     Records results of a speed test to the csv file at the path specified. May raise any errors from open() statement.
-    :param csv_path: path to the csv file
+    :param csv_path: path to the csv file to write results to
     :param result_obj: the results to store, as a Result object
     """
 
@@ -30,7 +31,7 @@ def writeResults(csv_path: str, result_obj):
 def readResults(csv_path: str):
     """
     Reads the results stored in the file at csv_path. May raise any errors from open() statement.
-    :param csv_path: path to csv file to read from
+    :param csv_path: path to csv file to read results from
     :return: a dictionary of results objects, separating different types of bugs
     """
 
@@ -53,3 +54,26 @@ def readResults(csv_path: str):
                 results_dict[result.method].append(result)
 
     return results_dict
+
+
+def writePalette(json_path: str, graph_palettes: dict):
+    """
+    Stores a dictionary of graph color palettes in a json file.
+    :param json_path: path to json file to write graph color palettes to
+    :param graph_palettes: dictionary of GraphPalette objects to store
+    """
+
+    with open(json_path, "w") as json_file:
+        json.dump(graph_palettes, json_file, indent=4)
+
+
+def readPalette(json_path):
+    """
+    Reads the graph color palettes from a json file.
+    :param json_path: path to json file to read from
+    :return: dictionary, with each method as a key, to dictionaries each storing download and upload keys, with their
+    repective color.
+    """
+
+    with open(json_path, "r") as json_file:
+        return json.load(json_file)

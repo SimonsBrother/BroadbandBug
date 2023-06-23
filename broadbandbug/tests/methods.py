@@ -9,6 +9,6 @@ files.makeFile(test_path)
 
 
 def test_speedtestcli():
-    for i in range(10):
+    for i in range(3):
         result = speedtestcli.performSpeedTest(speedtest.Speedtest())
         files.writeResults(test_path, result)

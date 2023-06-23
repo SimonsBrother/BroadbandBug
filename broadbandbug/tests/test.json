@@ -1,0 +1,10 @@
+{
+    "Speedtest CLI": {
+        "download": "135799",
+        "upload": "123456"
+    },
+    "test2": {
+        "download": "a",
+        "upload": "b"
+    }
+}
