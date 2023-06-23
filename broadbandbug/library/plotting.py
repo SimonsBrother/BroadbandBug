@@ -45,14 +45,14 @@ def methodPlot(graph, results_dict: dict, palettes: dict):
 
         # Plot download
         graph.plot(timestamps, download_speeds, marker="x", label=f"{bug_type} Download",
-                   color=palettes[bug_type]["download"], linewidth=2)
+                   color=('#' + palettes[bug_type]["download"]), linewidth=2)
 
         # Plot upload
         graph.plot(timestamps, upload_speeds, marker="+", label=f"{bug_type} Upload",
-                   color=palettes[bug_type]["upload"], linewidth=1)
+                   color=('#' + palettes[bug_type]["upload"]), linewidth=1)
 
 
-def singlePlot(graph, results_dict: dict, palette):
+def singlePlot(graph, results_dict: dict, palette=None):
     """
     Plots a line for download and upload, as a single plot for all methods
     :param graph: matplotlib pyplot
@@ -69,16 +69,17 @@ def singlePlot(graph, results_dict: dict, palette):
     for bug_type in results_dict.keys():
         # Get data needed for each graph
         timestamps += [formatTimeForGraph(result.timestamp) for result in results_dict[bug_type]]
-        download_speeds += [result["download"] for result in results_dict[bug_type]]
-        upload_speeds += [result["upload"] for result in results_dict[bug_type]]
+        download_speeds += [result.download for result in results_dict[bug_type]]
+        upload_speeds += [result.upload for result in results_dict[bug_type]]
 
+    # todo add modifiable colors (dont forget to modify params)
     # Plot download
     graph.plot(timestamps, download_speeds, marker="x", label=f"Download",
-               color=palette.download, linewidth=2)
+               color="#000000", linewidth=2)
 
     # Plot upload
     graph.plot(timestamps, upload_speeds, marker="+", label=f"Upload",
-               color=palette.upload, linewidth=1)
+               color="#ff0000", linewidth=1)
 
 
 if __name__ == "__main__":
