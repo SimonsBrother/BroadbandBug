@@ -1,59 +1,33 @@
-import math
-
-from matplotlib.patches import Rectangle
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
+import concurrent.futures
+from time import sleep
 
 
-def plot_colortable(colors, *, ncols=4, sort_colors=True):
-
-    cell_width = 212
-    cell_height = 22
-    swatch_width = 48
-    margin = 12
-
-    # Sort colors by hue, saturation, value and name.
-    if sort_colors is True:
-        names = sorted(
-            colors, key=lambda c: tuple(mcolors.rgb_to_hsv(mcolors.to_rgb(c))))
-    else:
-        names = list(colors)
-
-    n = len(names)
-    nrows = math.ceil(n / ncols)
-
-    width = cell_width * 4 + 2 * margin
-    height = cell_height * nrows + 2 * margin
-    dpi = 72
-
-    fig, ax = plt.subplots(figsize=(width / dpi, height / dpi), dpi=dpi)
-    fig.subplots_adjust(margin/width, margin/height,
-                        (width-margin)/width, (height-margin)/height)
-    ax.set_xlim(0, cell_width * 4)
-    ax.set_ylim(cell_height * (nrows-0.5), -cell_height/2.)
-    ax.yaxis.set_visible(False)
-    ax.xaxis.set_visible(False)
-    ax.set_axis_off()
-
-    for i, name in enumerate(names):
-        row = i % nrows
-        col = i // nrows
-        y = row * cell_height
-
-        swatch_start_x = cell_width * col
-        text_pos_x = cell_width * col + swatch_width + 7
-
-        ax.text(text_pos_x, y, name, fontsize=14,
-                horizontalalignment='left',
-                verticalalignment='center')
-
-        ax.add_patch(
-            Rectangle(xy=(swatch_start_x, y-9), width=swatch_width,
-                      height=18, facecolor=colors[name], edgecolor='0.7')
-        )
-
-    return fig
+def func1(p):
+    while True:
+        print(f"F1: {p}")
+        sleep(2)
 
 
-plot_colortable(mcolors.CSS4_COLORS)
-plt.show()
+def func2(p):
+    while True:
+        print(f"F2: {p}")
+        sleep(6)
+
+
+calls = []
+
+num = 1
+while num != 0:
+    num = int(input("1 or 2: "))
+    name = input("Name: ")
+
+    if num == 1:
+        calls.append((func1, name))
+    elif num == 2:
+        calls.append((func2, name))
+
+    print()
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=len(calls)) as executor:
+    for call in calls:
+        executor.map(call[0], (call[1],))

@@ -3,6 +3,7 @@ from broadbandbug.ui.functional.AddRecorder import AddRecorder
 from broadbandbug.ui.functional.GraphColorDialog import GraphColorDialog
 import broadbandbug.library.plotting as plotting
 import broadbandbug.library.files as files
+import broadbandbug.methods as methods
 
 from PyQt6.QtWidgets import QApplication, QMainWindow
 
@@ -33,17 +34,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # Make new recorder and add to threadpool
             recMethod = dlg.ui.methodComboBox.currentText()
-            # todo add to thread pool
+            # todo add to thread pool; implement recorders first
 
     def stopSelectedRec(self):
-        ...
+        ...  # todo implement stopping recorders
 
     def showGraph(self):
         from matplotlib import pyplot as plot
         plotting.styleGraph(plot)
 
         # Load results
-        results = files.readResults(self.results_csv_file)
+        results = files.readResults(self.results_csv_file)  # todo implement time selection
         colorPalettes = files.readPalette(self.color_palette_json_path)
 
         if self.separateCheckBox.isChecked():
