@@ -9,7 +9,12 @@ from PyQt6.QtWidgets import QApplication, QMainWindow
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, results_csv_file, color_palette_json_path, threadpool=None):
+    def __init__(self, results_csv_file, color_palette_json_path, tp_exe=None):
+        """
+        :param results_csv_file:
+        :param color_palette_json_path:
+        :param tp_exe:
+        """
         super(MainWindow, self).__init__()
         self.setupUi(self)
 

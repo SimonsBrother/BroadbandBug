@@ -1,8 +1,8 @@
-# Adapted from various articles from SuperFastPython.com
+# SuperFastPython.com
 # example of thread-safe writing to a file with a dedicated writer thread
 from random import random
 from queue import Queue
-from threading import Event
+from threading import Lock, Event
 import concurrent.futures as futures
 
 
@@ -32,6 +32,7 @@ def task(number, queue):
         queue.put(f'Thread {number} got {value}.\n')
 
 
+lock = Lock()
 event = Event()
 queue = Queue()
 

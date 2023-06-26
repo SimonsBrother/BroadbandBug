@@ -77,3 +77,29 @@ def readPalette(json_path):
 
     with open(json_path, "r") as json_file:
         return json.load(json_file)
+
+
+def resultsWriter(csv_path: str, queue, close_event):
+    """
+    Opens the csv file specified by csv_path, and writes any new records to it from the queue.
+    May raise any errors from open() statement. Adapted from various articles from SuperFastPython.com
+    :param csv_path: path to the csv file to write results to
+    :param queue: a Queue object that stores Record objects
+    :param close_event: an Event object that signifies when the function can end - will continue running until queue empty
+    :return:
+    """
+    # Open CSV file and initialise writer
+    with open(csv_path, "a") as csv_file:
+        writer = csv.writer(csv_file)
+
+        # Keep checking if there are results to be stored in the queue,
+        # or if the event signifying the end of the program is not triggered
+        while queue.qsize() > 0 or not close_event.is_set():
+            # Get next result
+            result_obj = queue.get()
+            # Write next result to csv file
+            writer.writerow([result_obj.download, result_obj.upload, result_obj.timestamp, result_obj.method])
+            # Flush buffer ti ensure there is no data to be written
+            csv_file.flush()
+            # Mark task as done since write is now complete
+            queue.task_done()
