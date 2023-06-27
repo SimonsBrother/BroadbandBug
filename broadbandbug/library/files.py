@@ -95,11 +95,14 @@ def resultsWriter(csv_path: str, queue, close_event):
         # Keep checking if there are results to be stored in the queue,
         # or if the event signifying the end of the program is not triggered
         while queue.qsize() > 0 or not close_event.is_set():
-            # Get next result
-            result_obj = queue.get()
-            # Write next result to csv file
-            writer.writerow([result_obj.download, result_obj.upload, result_obj.timestamp, result_obj.method])
-            # Flush buffer ti ensure there is no data to be written
-            csv_file.flush()
-            # Mark task as done since write is now complete
-            queue.task_done()
+            if queue.qsize() > 0:
+                # Get next result
+                print("E")
+                result_obj = queue.get()
+                # Write next result to csv file
+                writer.writerow([result_obj.download, result_obj.upload, result_obj.timestamp, result_obj.method])
+                # Flush buffer ti ensure there is no data to be written
+                csv_file.flush()
+                # Mark task as done since write is now complete
+                queue.task_done()
+                print(queue.qsize())

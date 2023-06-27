@@ -7,8 +7,9 @@ import concurrent.futures as futures
 
 from broadbandbug.ui.functional.MainWindow import MainWindow
 from broadbandbug.library.files import resultsWriter
+from broadbandbug.library.classes import Recorder
 
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMessageBox
 
 
 # Returns the current directory, allowing for frozen state (i.e., compiled exe)
@@ -24,7 +25,8 @@ def getPath():
     return path
 
 
-# Initialise variables todo replace with config
+# Initialise variables
+# todo replace with config
 results_path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.csv"
 config_path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.json"
 max_recorders = 10
@@ -32,6 +34,7 @@ max_recorders = 10
 results_queue = Queue()
 close_event = Event()
 
+recorders = {}
 
 # Open results file for entire program
 with open(results_path, 'a') as results_file:
@@ -39,14 +42,16 @@ with open(results_path, 'a') as results_file:
     with futures.ThreadPoolExecutor(max_recorders + 2) as exe:
 
         writer_future = exe.submit(resultsWriter, results_path, results_queue, close_event)
-        # todo implement system to add, remove, and keep track of recorders (possibly labeling submitted threads)
-
-        # futures.wait(recorder_futures, return_when=futures.ALL_COMPLETED)
 
         # Prepare GUI
         app = QApplication([])
 
-        window = MainWindow(results_path, config_path, exe)
+        window = MainWindow(results_path, config_path, recorders, exe)
         window.show()
 
         app.exec()
+        for recorder in list(recorders.values()):
+            print(recorder)
+            recorder.stopRecording()
+
+        close_event.set()
