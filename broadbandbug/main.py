@@ -7,9 +7,8 @@ import concurrent.futures as futures
 
 from broadbandbug.ui.functional.MainWindow import MainWindow
 from broadbandbug.library.files import resultsWriter
-from broadbandbug.library.classes import Recorder
 
-from PyQt6.QtWidgets import QApplication, QMessageBox
+from PyQt6.QtWidgets import QApplication
 
 
 # Returns the current directory, allowing for frozen state (i.e., compiled exe)
@@ -38,20 +37,22 @@ recorders = {}
 
 # Open results file for entire program
 with open(results_path, 'a') as results_file:
-    # Start ThreadPoolExecutor, with max_recorders + 2 to allow for results writer thread, and GUI
-    with futures.ThreadPoolExecutor(max_recorders + 2) as exe:
+    # Start ThreadPoolExecutor, with max_recorders + 1 to allow for results writer thread
+    with futures.ThreadPoolExecutor(max_recorders + 1) as exe:
 
         writer_future = exe.submit(resultsWriter, results_path, results_queue, close_event)
 
         # Prepare GUI
         app = QApplication([])
 
-        window = MainWindow(results_path, config_path, recorders, exe)
+        window = MainWindow(results_path, config_path, recorders, exe, results_queue)
         window.show()
 
         app.exec()
-        for recorder in list(recorders.values()):
-            print(recorder)
-            recorder.stopRecording()
 
+        # Stop results writer
         close_event.set()
+
+        # Stop running recorders
+        for recorder in list(recorders.values()):
+            recorder.stopRecording()

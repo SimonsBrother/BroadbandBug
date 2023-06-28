@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, results_csv_path, config_json_path, recorders, tp_exe=None):
+    def __init__(self, results_csv_path: str, config_json_path: str, recorders: dict, tp_exe, results_queue):
         """
         :param results_csv_path: path to the results csv file
         :param config_json_path: path to the config json file
@@ -30,6 +30,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.results_csv_file = results_csv_path
         self.tp_exe = tp_exe
         self.recorders = recorders
+        self.results_queue = results_queue
 
     def openAddRecDlg(self):
         # Open the dialog for adding recorders
@@ -44,7 +45,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # Identify method function to use, and make new recorder
             rec_method = dlg.ui.methodComboBox.currentText()
             function, params = determineMethodFunction(rec_method)
-            new_recorder = Recorder(rec_id, function, params)
+            new_recorder = Recorder(rec_id, function, params, self.results_queue)
             self.recorders[rec_id] = new_recorder
 
             # Start new recorder, adding it to thread pool
@@ -60,7 +61,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # If confirmed, take (remove) the selected item from the row and get the identifier of the recorder to be stopped
                 id_to_stop = self.runningRecList.takeItem(items[0].row()).text()
                 # Stop the recorder
-                self.recorders[id_to_stop].stopRecording()
+                self.recorders.pop(id_to_stop).stopRecording()
 
     def showGraph(self):
         from matplotlib import pyplot as plot
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     app = QApplication([])
 
     window = MainWindow("/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.csv",
-                        "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.json", {})
+                        "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.json", {}, None, None)
     window.show()  # Windows are hidden by default
 
     app.exec()
