@@ -2,9 +2,15 @@ from threading import Event
 
 
 class Result:
-    """ Stores the upload and download speed for easy access """
 
-    def __init__(self, download, upload, timestamp: str, method):
+    def __init__(self, download, upload, timestamp: str, method: str):
+        """
+        Stores the upload and download speed for easy access
+        :param download: value for download speed; converted to float
+        :param upload: value for upload speed; converted to float
+        :param timestamp: a string that represents the time and date the result was obtained
+        :param method: the method used to obtain the result (a constant)
+        """
         self.download = float(download)
         self.upload = float(upload)
         self.timestamp = timestamp
@@ -12,7 +18,7 @@ class Result:
 
     def __repr__(self):
         return f"Result(download={self.download}, upload={self.upload}," \
-               f" timestamp={self.timestamp}, bug_type={self.method})"
+               f" timestamp={self.timestamp}, method={self.method})"
 
 
 class Recorder:

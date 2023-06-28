@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, results_csv_path: str, config_json_path: str, recorders: dict, tp_exe, results_queue):
+    def __init__(self, results_csv_path: str, config_json_path: str, recorders: dict, tp_exe, results_queue, max_rec: int):
         """
         :param results_csv_path: path to the results csv file
         :param config_json_path: path to the config json file
@@ -31,25 +31,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tp_exe = tp_exe
         self.recorders = recorders
         self.results_queue = results_queue
+        self.max_recorders = max_rec
 
     def openAddRecDlg(self):
         # Open the dialog for adding recorders
         dlg = AddRecorder(self)
 
-        # Run dialog
-        if dlg.exec():
-            # If Ok clicked, add the identifier to list
-            rec_id = dlg.ui.idLineEdit.text()
-            self.runningRecList.addItem(rec_id)
+        # Ensure max number of recorders isn't reached
+        if len(self.recorders) < self.max_recorders:
+            # Run dialog
+            if dlg.exec():
+                # If Ok clicked, add the identifier to list
+                rec_id = dlg.ui.idLineEdit.text()
+                self.runningRecList.addItem(rec_id)
 
-            # Identify method function to use, and make new recorder
-            rec_method = dlg.ui.methodComboBox.currentText()
-            function, params = determineMethodFunction(rec_method)
-            new_recorder = Recorder(rec_id, function, params, self.results_queue)
-            self.recorders[rec_id] = new_recorder
+                # Identify method function to use, and make new recorder
+                rec_method = dlg.ui.methodComboBox.currentText()
+                function, params = determineMethodFunction(rec_method)
+                new_recorder = Recorder(rec_id, function, params, self.results_queue)
+                self.recorders[rec_id] = new_recorder
 
-            # Start new recorder, adding it to thread pool
-            new_recorder.startRecording(self.tp_exe)
+                # Start new recorder, adding it to thread pool
+                new_recorder.startRecording(self.tp_exe)
+
+        else:
+            # Max recorders reached
+            QMessageBox.critical(self, "Max recorders", f"The maximum number of recorders is {self.max_recorders}. "
+                                                        f"Cannot add any more recorders.")
 
     def stopSelectedRec(self):
         # Check if there are any selected rows
@@ -91,7 +99,7 @@ if __name__ == "__main__":
     app = QApplication([])
 
     window = MainWindow("/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.csv",
-                        "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.json", {}, None, None)
+                        "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.json", {}, None, None, 2)
     window.show()  # Windows are hidden by default
 
     app.exec()

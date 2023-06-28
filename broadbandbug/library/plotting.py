@@ -20,7 +20,7 @@ def styleGraph(graph):
     ax.tick_params(labelcolor="orange")
 
     graph.gcf().autofmt_xdate()
-    xfmt = md.DateFormatter('%H:%M:%S')
+    xfmt = md.DateFormatter('%H:%M:%S')  # todo show date as well
     ax.xaxis.set_major_formatter(xfmt)
 
     # Labels

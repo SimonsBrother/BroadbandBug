@@ -7,6 +7,7 @@ import concurrent.futures as futures
 
 from broadbandbug.ui.functional.MainWindow import MainWindow
 from broadbandbug.library.files import resultsWriter
+from broadbandbug.library.constants import SUPPORTED_METHODS
 
 from PyQt6.QtWidgets import QApplication
 
@@ -24,16 +25,49 @@ def getPath():
     return path
 
 
+# Get locations of needed files (in "data" directory of same directory as program)
+wd = getPath()
+results_path = str(wd.joinpath("data", "results.csv"))
+config_path = str(wd.joinpath("data", "config.json"))
+
+# Ensure data directory exists
+try:
+    os.mkdir("data")
+except OSError:
+    pass
+
+# Ensure config file exists
+if not os.path.exists(config_path):
+    # If config file doesn't exist, create it with default contents
+    with open(config_path, "w") as config_file:
+        config_file.write("""{
+    "Speedtest CLI": {
+        "download": "000000",
+        "upload": "ff0000"
+    },
+    "BT Website": {
+        "download": "4D22AD",
+        "upload": "2A2A2A"
+    },
+    "Which? Website": {
+        "download": "E25241",
+        "upload": "5082C7"
+    }
+}""")
+
+# No need to check if results file exists, it is created if needed when opened for writing below
+
 # Initialise variables
-# todo replace with config
-results_path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.csv"
-config_path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.json"
-max_recorders = 10
+max_recorders = 5
 
 results_queue = Queue()
 close_event = Event()
 
 recorders = {}
+
+# For testing
+# results_path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.csv"
+# config_path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.json"
 
 # Open results file for entire program
 with open(results_path, 'a') as results_file:
@@ -45,7 +79,7 @@ with open(results_path, 'a') as results_file:
         # Prepare GUI
         app = QApplication([])
 
-        window = MainWindow(results_path, config_path, recorders, exe, results_queue)
+        window = MainWindow(results_path, config_path, recorders, exe, results_queue, max_recorders)
         window.show()
 
         app.exec()
