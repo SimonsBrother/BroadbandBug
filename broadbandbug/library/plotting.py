@@ -51,6 +51,8 @@ def methodPlot(graph, results_dict: dict, palettes: dict):
         graph.plot(timestamps, upload_speeds, marker="+", label=f"{bug_type} Upload",
                    color=('#' + palettes[bug_type]["upload"]), linewidth=1)
 
+        graph.legend()
+
 
 def singlePlot(graph, results_dict: dict, palette=None):
     """
@@ -72,7 +74,7 @@ def singlePlot(graph, results_dict: dict, palette=None):
         download_speeds += [result.download for result in results_dict[bug_type]]
         upload_speeds += [result.upload for result in results_dict[bug_type]]
 
-    # todo add modifiable colors (dont forget to modify params)
+    # todo add modifiable colors (dont forget to modify params) UNIMPORTANT
     # Plot download
     graph.plot(timestamps, download_speeds, marker="x", label=f"Download",
                color="#000000", linewidth=2)
@@ -81,13 +83,15 @@ def singlePlot(graph, results_dict: dict, palette=None):
     graph.plot(timestamps, upload_speeds, marker="+", label=f"Upload",
                color="#ff0000", linewidth=1)
 
+    graph.legend()
+
 
 if __name__ == "__main__":
     from broadbandbug.library.files import readResults
     from broadbandbug.library.constants import METHOD_SPEEDTESTCLI
 
     path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.csv"
-    graphPalettes = {METHOD_SPEEDTESTCLI: {"download": "orange", "upload": "grey"}}
+    graphPalettes = {METHOD_SPEEDTESTCLI: {"download": "000000", "upload": "222222"}}
 
     styleGraph(plt)
     methodPlot(plt, readResults(path), graphPalettes)

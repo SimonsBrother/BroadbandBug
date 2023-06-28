@@ -1,7 +1,9 @@
 import csv
 import json
+from datetime import datetime
 
 from broadbandbug.library.classes import Result
+from broadbandbug.library.constants import TIME_FORMAT
 
 
 # Checks whether the file specified exists, making it if it does not.
@@ -28,10 +30,11 @@ def writeResults(csv_path: str, result_obj):
         writer.writerow([result_obj.download, result_obj.upload, result_obj.timestamp, result_obj.method])
 
 
-def readResults(csv_path: str):
+def readResults(csv_path: str, dt_constraints: tuple):
     """
     Reads the results stored in the file at csv_path. May raise any errors from open() statement.
     :param csv_path: path to csv file to read results from
+    :param dt_constraints: a tuple storing two datetime objects to indicate what times to return (from, to)
     :return: a dictionary of results objects, separating different types of bugs
     """
 
@@ -44,14 +47,18 @@ def readResults(csv_path: str):
         for row in reader:
             result = Result(*row)
 
-            # If the result type has not yet been encountered, make a new category
-            if result.method not in results_dict.keys():
-                # Add the result to the new list when instantiating the new list
-                results_dict[result.method] = [result]
+            # Convert timestamp to datetime, and check it is in bounds
+            timestamp_dt = datetime.strptime(result.timestamp, TIME_FORMAT)
+            if dt_constraints[0] <= timestamp_dt <= dt_constraints[1]:
 
-            # Otherwise, add the result to the relevant type
-            else:
-                results_dict[result.method].append(result)
+                # If the result type has not yet been encountered, make a new category
+                if result.method not in results_dict.keys():
+                    # Add the result to the new list when instantiating the new list
+                    results_dict[result.method] = [result]
+
+                # Otherwise, add the result to the relevant type
+                else:
+                    results_dict[result.method].append(result)
 
     return results_dict
 

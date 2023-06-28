@@ -67,8 +67,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         from matplotlib import pyplot as plot
         plotting.styleGraph(plot)
 
+        # Get date times to work with
+        date_from = self.fromDTEdit.dateTime()
+        date_to = self.toDTEdit.dateTime()
+
         # Load results
-        results = files.readResults(self.results_csv_file)  # todo implement time selection
+        results = files.readResults(self.results_csv_file, (date_from, date_to))
         color_palettes = files.readPalette(self.config_json_path)
 
         if self.separateCheckBox.isChecked():

@@ -4,7 +4,7 @@ from threading import Event
 class Result:
     """ Stores the upload and download speed for easy access """
 
-    def __init__(self, download, upload, timestamp, method):
+    def __init__(self, download, upload, timestamp: str, method):
         self.download = float(download)
         self.upload = float(upload)
         self.timestamp = timestamp
