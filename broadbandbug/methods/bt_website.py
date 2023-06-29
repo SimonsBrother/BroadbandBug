@@ -5,8 +5,9 @@ from broadbandbug.library.constants import TIME_FORMAT, METHOD_SPEEDTESTCLI
 
 
 def performSpeedTest():
-    return requests.get("https://www.broadbandspeedchecker.co.uk")
-"https://www.broadbandspeedchecker.co.uk/?&again&getBestServerAndUserInfo=true&serverID=41&serverTitle=London"
+    ...
+    "https://www.broadbandspeedchecker.co.uk"
+    "https://www.broadbandspeedchecker.co.uk/?&again&getBestServerAndUserInfo=true&serverID=41&serverTitle=London"
 
 
 if __name__ == "__main__":

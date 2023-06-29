@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>368</width>
-    <height>106</height>
+    <width>384</width>
+    <height>166</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,6 +45,27 @@
       <widget class="QComboBox" name="methodComboBox"/>
      </item>
     </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="driverHLayout">
+     <item>
+      <widget class="QLabel" name="driverLabel">
+       <property name="text">
+        <string>Select browser to use:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="driverComboBox"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Note that if a browser is used,  it may take a minute to set up.</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">

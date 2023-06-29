@@ -45,9 +45,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 rec_id = dlg.ui.idLineEdit.text()
                 self.runningRecList.addItem(rec_id)
 
-                # Identify method function to use, and make new recorder
+                # Identify method function and browser to use
                 rec_method = dlg.ui.methodComboBox.currentText()
-                function, params = determineMethodFunction(rec_method)
+                browser = dlg.ui.driverComboBox.currentText()
+                function, params = determineMethodFunction(rec_method, browser)
+
+                # Create new recorder
                 new_recorder = Recorder(rec_id, function, params, self.results_queue)
                 self.recorders[rec_id] = new_recorder
 

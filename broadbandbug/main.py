@@ -7,7 +7,6 @@ import concurrent.futures as futures
 
 from broadbandbug.ui.functional.MainWindow import MainWindow
 from broadbandbug.library.files import resultsWriter
-from broadbandbug.library.constants import SUPPORTED_METHODS
 
 from PyQt6.QtWidgets import QApplication
 

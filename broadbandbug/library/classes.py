@@ -1,8 +1,9 @@
 from threading import Event
 
+from selenium.webdriver.remote.webdriver import WebDriver
+
 
 class Result:
-
     def __init__(self, download, upload, timestamp: str, method: str):
         """
         Stores the upload and download speed for easy access
@@ -22,16 +23,16 @@ class Result:
 
 
 class Recorder:
-    def __init__(self, identifier: str, method_function, params: tuple, results_queue):
+    def __init__(self, identifier: str, method_function, args: tuple, results_queue):
         """
         :param identifier: a string identifying the recorder
         :param method_function: the function to be called to take a reading of bandwidth
-        :param params: the parameters needed to operate the method function
+        :param args: the arguments needed to operate the method function
         :param results_queue: the Queue object used to write to the results csv file
         """
         self.identifier = identifier
         self.method_function = method_function
-        self.parameters = params
+        self.args = args
         self.results_queue = results_queue
         self.stop_event = Event()
         self.future = None
@@ -41,16 +42,22 @@ class Recorder:
         # Repeat until the recorder is stopped
         while not self.stop_event.is_set():
             # Add new Result object to queue
-            self.results_queue.put(self.method_function(*self.parameters))
+            self.results_queue.put(self.method_function(*self.args))
 
-        # Signify the recording has stopped
-        return True
+        # Go through the arguments passed, and check for any WebDriver objects, and close them
+        for arg in self.args:
+            if isinstance(arg, WebDriver):
+                arg.quit()
+
+        print(f"{self.identifier} has stopped.")
 
     def startRecording(self, tp_executor):
         # Submit the new Recorder object's startRecording function to executor, and set the Recorder's future
         self.future = tp_executor.submit(self.recording)
+        print(f"{self.identifier} has started.")
 
     def stopRecording(self):
+        print(f"Stopping {self.identifier}...")
         self.stop_event.set()
 
     def __repr__(self):

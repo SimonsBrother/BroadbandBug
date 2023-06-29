@@ -1,5 +1,5 @@
 from broadbandbug.ui.addrecorder import Ui_AddRecorder
-from broadbandbug.library.constants import SUPPORTED_METHODS
+from broadbandbug.library.constants import SUPPORTED_METHODS, SUPPORTED_BROWSERS, METHODS_USING_BROWSERS
 
 from PyQt6.QtWidgets import QApplication, QDialog, QMessageBox
 
@@ -15,7 +15,13 @@ class AddRecorder(QDialog):
 
         # FUNCTIONALITY ASSIGNED HERE
         self.ui.methodComboBox.addItems(SUPPORTED_METHODS)
+        self.ui.driverComboBox.addItems(SUPPORTED_BROWSERS)
+
         self.ui.buttonBox.accepted.connect(self.okClicked)
+        self.ui.methodComboBox.currentIndexChanged.connect(self.methodChanged)
+
+        # Call to ensure browser combo box is enabled/disabled appropriately
+        self.methodChanged()
 
         self.parent = parent
 
@@ -34,6 +40,12 @@ class AddRecorder(QDialog):
 
         # ID not used yet, so 'accept'. The main window will handle starting the new recorder and adding it to the list
         self.accept()
+
+    def methodChanged(self):
+        if self.ui.methodComboBox.currentText() in METHODS_USING_BROWSERS:
+            self.ui.driverComboBox.setEnabled(True)
+        else:
+            self.ui.driverComboBox.setDisabled(True)
 
 
 if __name__ == "__main__":

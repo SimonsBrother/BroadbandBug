@@ -12,19 +12,17 @@ def formatTimeForGraph(string):
 
 
 def styleGraph(graph):
-    yaxis_extension = 10  # How much to add to the y limit so that the line doesn't reach the top
-
     # Styling
     graph.style.use("seaborn-darkgrid")
     fig, ax = plt.subplots(facecolor="#0d0433")
     ax.tick_params(labelcolor="orange")
 
     graph.gcf().autofmt_xdate()
-    xfmt = md.DateFormatter('%H:%M:%S')  # todo show date as well
+    xfmt = md.DateFormatter("%d/%m/%Y, %M:%H")
     ax.xaxis.set_major_formatter(xfmt)
 
     # Labels
-    graph.xlabel("Time (hour:min)", color="white")
+    graph.xlabel("Time (day/month/yr, min:hr)", color="white")
     graph.ylabel("Megabits/s", color="white")
     graph.title("Broadband Speed", color="white")
 
@@ -74,7 +72,6 @@ def singlePlot(graph, results_dict: dict, palette=None):
         download_speeds += [result.download for result in results_dict[bug_type]]
         upload_speeds += [result.upload for result in results_dict[bug_type]]
 
-    # todo add modifiable colors (dont forget to modify params) UNIMPORTANT
     # Plot download
     graph.plot(timestamps, download_speeds, marker="x", label=f"Download",
                color="#000000", linewidth=2)
