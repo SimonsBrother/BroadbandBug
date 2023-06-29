@@ -32,32 +32,42 @@ def makeEdgeWebDriver(timeout=10):
 
 
 def determineMethodFunction(method_name, preferred_driver):
-    # Get function related to method
-    if method_name == consts.METHOD_SPEEDTESTCLI:  # speedtest cli method
-        # Assign method function
-        function = speedtestcli.performSpeedTest
+    """ Returns function related to method and the arguments to pass to it; returns (None, Exception) if exception """
 
-        # Generate new speedtest object, and store it in tuple to be passed as parameters
-        speedtest_obj = speedtest.Speedtest()
-        speedtest_obj.get_best_server()
-        params = (speedtest_obj,)
+    try:
+        # Speedtest CLI
+        if method_name == consts.METHOD_SPEEDTESTCLI:
+            # Assign method function
+            function = speedtestcli.performSpeedTest
 
-        return function, params
+            # Generate new speedtest object, and store it in tuple to be passed as parameters
+            speedtest_obj = speedtest.Speedtest()
+            speedtest_obj.get_best_server()
+            params = (speedtest_obj,)
 
-    elif method_name == consts.METHOD_BTWEBSITE:  # bt website method
-        raise NotImplementedError
+            return function, params
 
-    elif method_name == consts.METHOD_WHICHWEBSITE:  # which website method
-        if preferred_driver == consts.CHROME:
-            driver = makeChromeWebDriver()
+        # BT Website
+        elif method_name == consts.METHOD_BTWEBSITE:
+            raise NotImplementedError
+
+        # Which? Website
+        elif method_name == consts.METHOD_WHICHWEBSITE:
+            if preferred_driver == consts.CHROME:
+                driver = makeChromeWebDriver()
+            else:
+                # todo test edge
+                driver = makeEdgeWebDriver()
+            which_website.setupWebsite(driver)
+
+            function = which_website.performSpeedTest
+            params = (driver,)
+
+            return function, params
+
+        # Invalid method given
         else:
-            driver = makeEdgeWebDriver()
-        which_website.setupWebsite(driver)
+            raise NameError("Invalid method name")
 
-        function = which_website.performSpeedTest
-        params = (driver,)
-
-        return function, params
-
-    else:
-        raise NameError("Invalid method name")
+    except Exception as e:
+        return None, e

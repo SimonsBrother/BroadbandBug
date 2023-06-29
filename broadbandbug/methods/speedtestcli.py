@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 
 from broadbandbug.library.classes import Result
 from broadbandbug.library.constants import TIME_FORMAT, METHOD_SPEEDTESTCLI
@@ -17,7 +18,7 @@ def convertToMbs(bps):
     return float(bps) / 1_000_000
 
 
-def performSpeedTest(speedtest_obj, num_threads=None):  # todo test
+def performSpeedTest(speedtest_obj, num_threads=None):
     """
     Performs a speedtest with the speedtest-cli library using the Speedtest object and number of threads specified.
     Performs a download test, then an upload test.
@@ -32,6 +33,10 @@ def performSpeedTest(speedtest_obj, num_threads=None):  # todo test
 
     timestamp = datetime.now().strftime(TIME_FORMAT)
 
+    # If the connection dies, wait for 30 seconds (otherwise will spam with zeroes)
+    if speedtest_obj.results.download == 0 or speedtest_obj.results.upload == 0:
+        sleep(30)
+
     return Result(convertToMbs(speedtest_obj.results.download), convertToMbs(speedtest_obj.results.upload), timestamp,
                   METHOD_SPEEDTESTCLI)
 
@@ -39,5 +44,5 @@ def performSpeedTest(speedtest_obj, num_threads=None):  # todo test
 if __name__ == "__main__":
     spdtest = speedtest.Speedtest()
     spdtest.get_best_server()
-
-    print(performSpeedTest(spdtest))
+    while True:
+        print(performSpeedTest(spdtest))

@@ -50,12 +50,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 browser = dlg.ui.driverComboBox.currentText()
                 function, params = determineMethodFunction(rec_method, browser)
 
-                # Create new recorder
-                new_recorder = Recorder(rec_id, function, params, self.results_queue)
-                self.recorders[rec_id] = new_recorder
+                # Check for errors
+                if function is not None:
+                    # Create new recorder
+                    new_recorder = Recorder(rec_id, function, params, self.results_queue)
+                    self.recorders[rec_id] = new_recorder
 
-                # Start new recorder, adding it to thread pool
-                new_recorder.startRecording(self.tp_exe)
+                    # Start new recorder, adding it to thread pool
+                    new_recorder.startRecording(self.tp_exe)
+
+                else:  # Error occurred
+                    # Truncate error report to feasible size
+                    params = str(params)
+                    max_chars = 500
+                    if len(params) > max_chars:
+                        params = f"{params[:max_chars]}\n\nError truncated for convenience."
+
+                    QMessageBox.critical(self, "Error occurred", f"An error occurred when setting up that recorder:\n\n"
+                                                                 f"{params}")
 
         else:
             # Max recorders reached
@@ -99,6 +111,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == "__main__":
+    print("Use main.")
+    exit(1)
     app = QApplication([])
 
     window = MainWindow("/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.csv",
