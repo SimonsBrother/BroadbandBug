@@ -18,11 +18,11 @@ def styleGraph(graph):
     ax.tick_params(labelcolor="orange")
 
     graph.gcf().autofmt_xdate()
-    xfmt = md.DateFormatter("%d/%m/%Y, %M:%H")
+    xfmt = md.DateFormatter("%d/%m/%Y, %H:%M")
     ax.xaxis.set_major_formatter(xfmt)
 
     # Labels
-    graph.xlabel("Time (day/month/yr, min:hr)", color="white")
+    graph.xlabel("Time (day/month/yr, hr:min)", color="white")
     graph.ylabel("Megabits/s", color="white")
     graph.title("Broadband Speed", color="white")
 

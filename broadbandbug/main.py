@@ -57,6 +57,7 @@ if not os.path.exists(config_path):
 # No need to check if results file exists, it is created if needed when opened for writing below
 
 # Initialise variables
+# TODO: Possible bug, recorders don't stop immediately, but may appear to stop immediately, so someone could try and add more recorders than allowed.
 max_recorders = 5
 
 results_queue = Queue()
