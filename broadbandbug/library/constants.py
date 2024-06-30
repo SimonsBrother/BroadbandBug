@@ -1,15 +1,17 @@
+from enum import Enum
+
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
-# TODO: Use enum
-METHOD_SPEEDTESTCLI = "Speedtest CLI"
-METHOD_BTWEBSITE = "BT Website"
-METHOD_WHICHWEBSITE = "Which? Website"
 
-SUPPORTED_METHODS = (METHOD_SPEEDTESTCLI, METHOD_BTWEBSITE, METHOD_WHICHWEBSITE)
+class RecordingMethod(Enum):
+    SPEEDTEST_CLI = "Speedtest CLI"
+    BT_WEBSITE = "BT Website"
+    WHICH_WEBSITE = "Which? Website"
 
-# TODO: Use enum
-CHROME = "Chrome"
-EDGE = "Edge"
-SUPPORTED_BROWSERS = (CHROME, EDGE)
 
-METHODS_USING_BROWSERS = (METHOD_BTWEBSITE, METHOD_WHICHWEBSITE)
+class Browser(Enum):
+    CHROME = "Chrome"
+    EDGE = "Edge"
+
+
+METHODS_USING_BROWSER = (RecordingMethod.BT_WEBSITE, RecordingMethod.WHICH_WEBSITE)

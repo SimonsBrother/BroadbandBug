@@ -6,19 +6,21 @@ from datetime import datetime
 
 from selenium.webdriver.remote.webdriver import WebDriver
 
+import constants
+
 
 @dataclass
 class BroadbandReading:
     """ Stores the upload and download broadband speed
-    :var download: test (no specific unit)
-    :var upload: the upload speed (no specific unit)
-    :var timestamp: when the reading was obtained.
-    :var method: the method by which this reading was obtained.
+    :var download: float, test (no specific unit)
+    :var upload: float, the upload speed (no specific unit)
+    :var timestamp: datetime, when the reading was obtained.
+    :var method: RecordingMethod, the method by which this reading was obtained.
     """
     download: float
     upload: float
-    timestamp: str  # TODO: replace with datetime or actual timestamp (seconds since epoch)?
-    method: str  # TODO: replace once constants are replaced
+    timestamp: datetime
+    method: constants.RecordingMethod
 
 
 class Recorder:
@@ -31,7 +33,6 @@ class Recorder:
         :param identifier: a string identifying the recorder.
         :param take_reading_function: the function to be called to take a reading of bandwidth (possibly opening a webpage).
         :param args: the arguments needed to run the reading function.
-
         """
         self.identifier = identifier
         self.take_reading_function = take_reading_function
