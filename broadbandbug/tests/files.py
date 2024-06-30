@@ -2,7 +2,7 @@ from datetime import datetime
 
 import broadbandbug.library.files as files
 import broadbandbug.library.constants as consts
-from broadbandbug.library.classes import Result
+from broadbandbug.library.classes import BroadbandReading
 
 test_csv_path = "test.csv"
 test_json_path = "test.json"
@@ -11,7 +11,7 @@ files.makeFile(test_json_path)
 
 
 def test_writeResults():
-    files.writeResults(test_csv_path, Result(1, 2, datetime.now().strftime(consts.TIME_FORMAT), consts.METHOD_SPEEDTESTCLI))
+    files.writeResults(test_csv_path, BroadbandReading(1, 2, datetime.now().strftime(consts.TIME_FORMAT), consts.METHOD_SPEEDTESTCLI))
 
 
 def test_readResults():

@@ -1,7 +1,7 @@
 from datetime import datetime
 from time import sleep
 
-from broadbandbug.library.classes import Result
+from broadbandbug.library.classes import BroadbandReading
 from broadbandbug.library.constants import TIME_FORMAT, METHOD_WHICHWEBSITE
 
 from selenium.webdriver.common.by import By
@@ -55,7 +55,7 @@ def performSpeedTest(driver):
 
     finally:
         timestamp = datetime.now().strftime(TIME_FORMAT)
-        return Result(download, upload, timestamp, METHOD_WHICHWEBSITE)
+        return BroadbandReading(download, upload, timestamp, METHOD_WHICHWEBSITE)
 
 
 if __name__ == "__main__":

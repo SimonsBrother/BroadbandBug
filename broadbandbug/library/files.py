@@ -2,7 +2,7 @@ import csv
 import json
 from datetime import datetime
 
-from broadbandbug.library.classes import Result
+from broadbandbug.library.classes import BroadbandReading
 from broadbandbug.library.constants import TIME_FORMAT
 
 
@@ -21,6 +21,7 @@ def makeFile(path: str):
         return False
 
 
+# TODO: could prob get rid of this
 def writeResults(csv_path: str, result_obj):
     """
     Records results of a speed test to the csv file at the path specified. May raise any errors from open() statement.
@@ -48,7 +49,7 @@ def readResults(csv_path: str, dt_constraints: tuple):
 
         # Unpack each row into Result object
         for row in reader:
-            result = Result(*row)
+            result = BroadbandReading(*row)
 
             # Convert timestamp to datetime, and check it is in bounds
             timestamp_dt = datetime.strptime(result.timestamp, TIME_FORMAT)

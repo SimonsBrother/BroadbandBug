@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from broadbandbug.library.classes import Result
+from broadbandbug.library.classes import BroadbandReading
 from broadbandbug.library.constants import TIME_FORMAT, METHOD_SPEEDTESTCLI
 
 

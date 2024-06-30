@@ -1,54 +1,51 @@
-""" Defines classes used throughout BroadbandBug. """
-
+""" Defines most of the classes used throughout BroadbandBug. """
+from dataclasses import dataclass
 from threading import Event
+from queue import Queue
+from datetime import datetime
 
 from selenium.webdriver.remote.webdriver import WebDriver
 
 
-class Result:
-    def __init__(self, download, upload, timestamp: str, method: str):
-        # TODO: double check documentation here
-        """
-        Stores the upload and download speed for easy access
-        :param download: value for download speed
-        :param upload: value for upload speed
-        :param timestamp: a string that represents the time and date the result was obtained
-        :param method: the method used to obtain the result
-        """
-        self.download = float(download)
-        self.upload = float(upload)
-        self.timestamp = timestamp
-        self.method = method
-
-    def __repr__(self):
-        return f"Result(download={self.download}, upload={self.upload}," \
-               f" timestamp={self.timestamp}, method={self.method})"
+@dataclass
+class BroadbandReading:
+    """ Stores the upload and download broadband speed
+    :var download: test (no specific unit)
+    :var upload: the upload speed (no specific unit)
+    :var timestamp: when the reading was obtained.
+    :var method: the method by which this reading was obtained.
+    """
+    download: float
+    upload: float
+    timestamp: str  # TODO: replace with datetime or actual timestamp (seconds since epoch)?
+    method: str  # TODO: replace once constants are replaced
 
 
-# TODO: Add type hints and switch to snake case
 class Recorder:
-    def __init__(self, identifier: str, take_reading_function, args: tuple, results_queue):
+    # The Queue object used as a buffer that for writing to the results file.
+    # A queue is used because it is thread safe, which is important since multiple recorders may provide data at the same time.
+    results_queue = Queue()
+
+    def __init__(self, identifier: str, take_reading_function, args: tuple):
         """
         :param identifier: a string identifying the recorder.
         :param take_reading_function: the function to be called to take a reading of bandwidth (possibly opening a webpage).
         :param args: the arguments needed to run the reading function.
-        :param results_queue: the Queue object used to write to the results csv file - this is passed in because multiple recorders may use the same queue.
+
         """
         self.identifier = identifier
-        self.method_function = take_reading_function
-        self.args = args  # TODO replace with kwargs
-        self.results_queue = results_queue
+        self.take_reading_function = take_reading_function
+        self.args = args  # TODO remove when replacing recording method
 
-        self.stop_event = Event()  # This can set or unset to indicate when the recorder should be stopped.
-        self.future = None  # TODO: Document
+        self.stop_event = Event()  # This can set to indicate when the recorder should be stopped.
+        self.future = None  # This represents the asynchronous execution of the recording_loop
 
-    # This function is to be passed on to the thread executor
-    # TODO: change name to verb
-    def recording(self):
+    # This function is to be passed on to the thread executor.
+    def recording_loop(self):
         # Repeat until the recorder is stopped
         while not self.stop_event.is_set():
             # Add new Result object to queue
-            self.results_queue.put(self.method_function(*self.args))
+            Recorder.results_queue.put(self.take_reading_function(*self.args))
 
         # Go through the arguments passed, and check for any WebDriver objects, and close them
         # TODO: have a custom shutdown function (maybe make recording methods OOP)
@@ -58,16 +55,23 @@ class Recorder:
 
         print(f"{self.identifier} has stopped.")
 
-    # TODO: what is tp executor
-    def startRecording(self, tp_executor):
-        # Submit the new Recorder object's startRecording function to executor, and set the Recorder's future
-        self.future = tp_executor.submit(self.recording)
+    @classmethod  # Define as class method because it affects class state
+    def add_result_to_queue(cls, reading: BroadbandReading):
+        """ Adds some reading to the queue. """
+        Recorder.results_queue.put(reading)
+
+    def start_recording(self, threadpool_executor):
+        # Submit the new Recorder object's recording_loop function to executor, and set the Recorder's future
+        self.future = threadpool_executor.submit(self.recording_loop)
         print(f"{self.identifier} has started.")
 
-    def stopRecording(self):
+    def stop_recording(self):
         print(f"Stopping {self.identifier}...")  # TODO: Switch to logging
         self.stop_event.set()
 
-    # TODO: check this
+    # TODO: test chatgpt's repr
     def __repr__(self):
-        return f"Recorder({self.identifier}, {self.method_function}, {self.future})"
+        return (f"Recorder(identifier={self.identifier!r}, "
+                f"take_reading_function={self.take_reading_function.__name__}, "
+                f"args={self.args!r}, "
+                f"stop_event_set={self.stop_event.is_set()})")

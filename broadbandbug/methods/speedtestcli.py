@@ -1,7 +1,7 @@
 from datetime import datetime
 from time import sleep
 
-from broadbandbug.library.classes import Result
+from broadbandbug.library.classes import BroadbandReading
 from broadbandbug.library.constants import TIME_FORMAT, METHOD_SPEEDTESTCLI
 
 import speedtest
@@ -37,8 +37,8 @@ def performSpeedTest(speedtest_obj, num_threads=None):
     if speedtest_obj.results.download == 0 or speedtest_obj.results.upload == 0:
         sleep(30)
 
-    return Result(convertToMbs(speedtest_obj.results.download), convertToMbs(speedtest_obj.results.upload), timestamp,
-                  METHOD_SPEEDTESTCLI)
+    return BroadbandReading(convertToMbs(speedtest_obj.results.download), convertToMbs(speedtest_obj.results.upload), timestamp,
+                            METHOD_SPEEDTESTCLI)
 
 
 if __name__ == "__main__":
