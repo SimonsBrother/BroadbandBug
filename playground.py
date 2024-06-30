@@ -1,4 +1,26 @@
-# Adapted from various articles from SuperFastPython.com
+class A:
+    x = 1
+
+    @staticmethod  # Define as class method because it affects class state
+    def t(a):
+        A.x = a
+
+class B(A):
+    ...
+
+class C(A):
+    ...
+
+print(A.x)
+print(B.x)
+print(C.x)
+C.x = 2
+A.x = 3
+print(A.x)
+print(B.x)
+print(C.x)
+
+"""# Adapted from various articles from SuperFastPython.com
 # example of thread-safe writing to a file with a dedicated writer thread
 from random import random
 from queue import Queue
@@ -45,3 +67,4 @@ with open(filepath, 'a') as file:
         thread_futures = [exe.submit(task, i, queue) for i in range(1000)]
         futures.wait(thread_futures, return_when=futures.ALL_COMPLETED)
         event.set()
+"""

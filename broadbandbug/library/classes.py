@@ -4,8 +4,6 @@ from threading import Event
 from queue import Queue
 from datetime import datetime
 
-from selenium.webdriver.remote.webdriver import WebDriver
-
 import constants
 
 
@@ -23,56 +21,55 @@ class BroadbandReading:
     method: constants.RecordingMethod
 
 
-class Recorder:
-    # The Queue object used as a buffer that for writing to the results file.
-    # A queue is used because it is thread safe, which is important since multiple recorders may provide data at the same time.
-    results_queue = Queue()
+class BaseRecorder:
+    # The Queue object used as a buffer for writing to the results file.
+    # Multiple recorders may provide data at the same time, so use thread-safe structure like queue.
+    # Hidden via underscore because only the BaseRecorder results attribute should be accessed (since modifying the superclass
+    # attribute will modify the child class static attributes, but modifying the child attributes will not affect the parent.
+    _results_queue = Queue()
 
-    def __init__(self, identifier: str, take_reading_function, args: tuple):
-        """
+    def __init__(self, identifier: str):
+        """ A base class defining how recorders will run, that is meant to be extended - specifically, recording_loop should be overridden.
         :param identifier: a string identifying the recorder.
-        :param take_reading_function: the function to be called to take a reading of bandwidth (possibly opening a webpage).
-        :param args: the arguments needed to run the reading function.
         """
         self.identifier = identifier
-        self.take_reading_function = take_reading_function
-        self.args = args  # TODO remove when replacing recording method
 
-        self.stop_event = Event()  # This can set to indicate when the recorder should be stopped.
+        self.stop_event = Event()  # This can be set to indicate when the recorder should be stopped.
         self.future = None  # This represents the asynchronous execution of the recording_loop
 
-    # This function is to be passed on to the thread executor.
+    # This function is to overridden and passed on to the thread executor. It is here as a demonstration only.
     def recording_loop(self):
+        print("USING BASE CLASS - THIS SHOULD NEVER BE USED IN PRACTICE, FOR TESTING PURPOSES ONLY")  # TODO use logging
         # Repeat until the recorder is stopped
         while not self.stop_event.is_set():
+            # Get new reading
+            reading = BroadbandReading(1, 2, datetime.now(), constants.RecordingMethod.BT_WEBSITE)
+
             # Add new Result object to queue
-            Recorder.results_queue.put(self.take_reading_function(*self.args))
+            BaseRecorder.add_result_to_queue(reading)
 
-        # Go through the arguments passed, and check for any WebDriver objects, and close them
-        # TODO: have a custom shutdown function (maybe make recording methods OOP)
-        for arg in self.args:
-            if isinstance(arg, WebDriver):
-                arg.quit()
-
+        # Log that the recorder has stopped. TODO use logging
         print(f"{self.identifier} has stopped.")
 
-    @classmethod  # Define as class method because it affects class state
-    def add_result_to_queue(cls, reading: BroadbandReading):
-        """ Adds some reading to the queue. """
-        Recorder.results_queue.put(reading)
+    @staticmethod  # Define as static method because regardless of which class it is from, it should only affect BaseRecorder.
+    def add_result_to_queue(reading: BroadbandReading):
+        """ Adds a reading to the queue. """
+        BaseRecorder._results_queue.put(reading)
+
+    @staticmethod
+    def get_results_queue():
+        """ Gets the results queue. """
+        return BaseRecorder._results_queue
 
     def start_recording(self, threadpool_executor):
-        # Submit the new Recorder object's recording_loop function to executor, and set the Recorder's future
+        """ Starts the recorder by submitting the recording function to the threadpool executor passed. """
+        # Submit the new BaseRecorder object's recording_loop function to executor, and set the BaseRecorder's future
         self.future = threadpool_executor.submit(self.recording_loop)
-        print(f"{self.identifier} has started.")
+        print(f"{self.identifier} has started.")  # TODO use logging
 
     def stop_recording(self):
-        print(f"Stopping {self.identifier}...")  # TODO: Switch to logging
+        print(f"Stopping {self.identifier}...")  # TODO use logging
         self.stop_event.set()
 
-    # TODO: test chatgpt's repr
     def __repr__(self):
-        return (f"Recorder(identifier={self.identifier!r}, "
-                f"take_reading_function={self.take_reading_function.__name__}, "
-                f"args={self.args!r}, "
-                f"stop_event_set={self.stop_event.is_set()})")
+        return f"{type(self)} {self.identifier!r} ({'stopped' if self.stop_event.is_set() else 'active'})"

@@ -3,7 +3,7 @@ from broadbandbug.ui.functional.AddRecorder import AddRecorder
 from broadbandbug.ui.functional.GraphColorDialog import GraphColorDialog
 import broadbandbug.library.plotting as plotting
 import broadbandbug.library.files as files
-from broadbandbug.library.classes import Recorder
+from broadbandbug.library.classes import BaseRecorder
 from broadbandbug.methods.common import determineMethodFunction
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox
@@ -53,7 +53,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # Check for errors
                 if function is not None:
                     # Create new recorder
-                    new_recorder = Recorder(rec_id, function, params, self.results_queue)
+                    new_recorder = BaseRecorder(rec_id, function, params, self.results_queue)
                     self.recorders[rec_id] = new_recorder
 
                     # Start new recorder, adding it to thread pool
