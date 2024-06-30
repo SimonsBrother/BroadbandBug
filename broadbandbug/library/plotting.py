@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as md
 
 
+# TODO: go through this again after everything else, check documentation and hints exist where appropriate
+
 # Converts date strings to a datetime - this is here for easy future changes
 def formatTimeForGraph(string):
     return datetime.strptime(string, TIME_FORMAT)

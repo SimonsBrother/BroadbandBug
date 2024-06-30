@@ -6,7 +6,10 @@ from broadbandbug.library.classes import Result
 from broadbandbug.library.constants import TIME_FORMAT
 
 
+# TODO: Go through everything, make sure all functions are used, make sure documentation is sensible
+
 # Checks whether the file specified exists, making it if it does not.
+# TODO: maybe use pathlib, make sure this works with compilation, add documentation
 def makeFile(path: str):
     try:
         path = open(str(path), "r")
