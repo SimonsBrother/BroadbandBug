@@ -5,7 +5,7 @@ from queue import Queue
 from datetime import datetime
 import logging
 
-from . import constants
+import constants
 
 
 @dataclass
@@ -23,7 +23,7 @@ class Reading:
 
     @staticmethod
     # Converts date strings to a datetime
-    def convertStringToDatetime(string: str):
+    def convert_string_to_datetime(string: str):
         return datetime.strptime(string, constants.TIME_FORMAT)
 
 

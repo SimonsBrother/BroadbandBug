@@ -1,12 +1,10 @@
 import csv
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import classes
 import constants
 
-
-# TODO: Go through everything, make sure all functions are used, make sure documentation is sensible
 
 # TODO: test, make sure this works when compiled
 def ensure_file_exists(path: Path | str):
@@ -27,13 +25,13 @@ def ensure_file_exists(path: Path | str):
     return exists
 
 
-def read_results(csv_path: str, time_constraints: tuple[datetime] | None, group_by_method: bool):
+def read_results(csv_path: str, time_constraints: tuple[datetime, datetime] | None, group_by_method: bool) -> dict | list:
     """
-    Reads the readings stored in the file at csv_path. May raise any errors from open() statement.
-    :param csv_path: path to csv file to read readings from.
+    Reads the broadband readings stored in the file at csv_path. May raise any errors from open() statement.
+    :param csv_path: path to csv file to read broadband readings from.
     :param time_constraints: a tuple storing two datetime objects to indicate what times to return (from, to). Set to None to ignore this constraint.
     :param group_by_method: set to True to group readings by how they were obtained.
-    :return: a dictionary of readings objects, separating different types of bugs
+    :return: a dict if group_by_method is True, where each key is a method, linked with a list of Reading objects. Otherwise, returns a list of Reading objects.
     """
     # Create data structure for storing Reading objects - group by method name if necessary, otherwise use a simple list
     readings = {method.value: [] for method in constants.RecordingMethod} if group_by_method else []
@@ -48,6 +46,7 @@ def read_results(csv_path: str, time_constraints: tuple[datetime] | None, group_
             # Check if timestamp check is needed, and if the timestamp is in bounds (because time constraints is checked first,
             # lazy eval will prevent the rest of the statement from evaluating and causing an error.
             if time_constraints is None or time_constraints[0] <= result.timestamp <= time_constraints[1]:
+                # TODO: minor optimisation: use two separate for loops contained in if statements
                 if group_by_method:
                     readings[result.method].append(result)
                 else:
@@ -61,7 +60,7 @@ def create_reading_from_row(row: dict) -> classes.Reading:
      For use with a method that gets Readings from a file. """
     return classes.Reading(float(row["upload"]),
                            float(row["download"]),
-                           classes.Reading.convertStringToDatetime(row["timestamp"]),
+                           classes.Reading.convert_string_to_datetime(row["timestamp"]),
                            constants.RecordingMethod(row["method"]))
 
 
