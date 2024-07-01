@@ -2,7 +2,8 @@ from datetime import datetime
 from time import sleep
 
 from broadbandbug.library.classes import BroadbandReading
-from broadbandbug.library.constants import TIME_FORMAT, METHOD_SPEEDTESTCLI
+from broadbandbug.library.constants import TIME_FORMAT, RecordingMethod
+METHOD_SPEEDTESTCLI = RecordingMethod.SPEEDTEST_CLI
 
 import speedtest
 

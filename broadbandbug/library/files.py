@@ -53,7 +53,7 @@ def readResults(csv_path: str, dt_constraints: tuple):
 
             # Convert timestamp to datetime, and check it is in bounds
             timestamp_dt = datetime.strptime(result.timestamp, TIME_FORMAT)
-            if dt_constraints[0] <= timestamp_dt <= dt_constraints[1]:
+            if dt_constraints is None or dt_constraints[0] <= timestamp_dt <= dt_constraints[1]:
 
                 # If the result type has not yet been encountered, make a new category
                 if result.method not in results_dict.keys():

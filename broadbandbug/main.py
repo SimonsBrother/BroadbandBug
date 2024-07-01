@@ -66,7 +66,7 @@ close_event = Event()
 recorders = {}
 
 # For testing
-# results_path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.csv"
+# results_path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/actual.csv"
 # config_path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.json"
 
 # Open results file for entire program

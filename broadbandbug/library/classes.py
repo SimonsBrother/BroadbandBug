@@ -5,7 +5,7 @@ from queue import Queue
 from datetime import datetime
 import logging
 
-import constants
+from . import constants
 
 
 @dataclass

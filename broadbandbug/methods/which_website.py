@@ -2,7 +2,8 @@ from datetime import datetime
 from time import sleep
 
 from broadbandbug.library.classes import BroadbandReading
-from broadbandbug.library.constants import TIME_FORMAT, METHOD_WHICHWEBSITE
+from broadbandbug.library.constants import TIME_FORMAT, RecordingMethod
+METHOD_WHICHWEBSITE = RecordingMethod.WHICH_WEBSITE
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException

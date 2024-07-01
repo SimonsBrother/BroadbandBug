@@ -2,31 +2,38 @@ from datetime import datetime
 
 from broadbandbug.library.constants import TIME_FORMAT
 
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt, ticker
 import matplotlib.dates as md
 
 
 # TODO: go through this again after everything else, check documentation and hints exist where appropriate
 
-# Converts date strings to a datetime - this is here for easy future changes
+# Converts date strings to a datetime - this is here for easy future changes # TODO move to Reading class
 def formatTimeForGraph(string):
     return datetime.strptime(string, TIME_FORMAT)
 
 
 def styleGraph(graph):
     # Styling
-    graph.style.use("seaborn-darkgrid")
     fig, ax = plt.subplots(facecolor="#0d0433")
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax.yaxis.set_minor_locator(ticker.MultipleLocator(2))  # This is easiest to count, I think
+    ax.tick_params(axis='both', which='minor', length=4, color='w')
+    ax.tick_params(axis='both', which='major', length=7, color='w')
     ax.tick_params(labelcolor="orange")
 
+    #ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x: round(x, 2)))
+
     graph.gcf().autofmt_xdate()
-    xfmt = md.DateFormatter("%d/%m/%Y, %H:%M")
+    xfmt = md.DateFormatter("%d/%m/%Y, %H:%M")  # TODO use constants once its changed
     ax.xaxis.set_major_formatter(xfmt)
 
     # Labels
     graph.xlabel("Time (day/month/yr, hr:min)", color="white")
     graph.ylabel("Megabits/s", color="white")
-    graph.title("Broadband Speed", color="white")
+    graph.title("Broadband Speed", color="white")  # TODO: custom title
 
 
 # Plots
@@ -54,7 +61,7 @@ def methodPlot(graph, results_dict: dict, palettes: dict):
         graph.legend()
 
 
-def singlePlot(graph, results_dict: dict, palette=None):
+def singlePlot(graph, results_dict: dict):
     """
     Plots a line for download and upload, as a single plot for all methods
     :param graph: matplotlib pyplot
@@ -71,8 +78,8 @@ def singlePlot(graph, results_dict: dict, palette=None):
     for bug_type in results_dict.keys():
         # Get data needed for each graph
         timestamps += [formatTimeForGraph(result.timestamp) for result in results_dict[bug_type]]
-        download_speeds += [result.download for result in results_dict[bug_type]]
-        upload_speeds += [result.upload for result in results_dict[bug_type]]
+        download_speeds += [float(result.download) for result in results_dict[bug_type]]
+        upload_speeds += [float(result.upload) for result in results_dict[bug_type]]
 
     # Plot download
     graph.plot(timestamps, download_speeds, marker="x", label=f"Download",
@@ -87,13 +94,10 @@ def singlePlot(graph, results_dict: dict, palette=None):
 
 if __name__ == "__main__":
     from broadbandbug.library.files import readResults
-    from broadbandbug.library.constants import METHOD_SPEEDTESTCLI
 
-    path = "/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/test.csv"
-    graphPalettes = {METHOD_SPEEDTESTCLI: {"download": "000000", "upload": "222222"}}
+    path = "../tests/resources/actual.csv"
 
     styleGraph(plt)
-    methodPlot(plt, readResults(path), graphPalettes)
+    singlePlot(plt, readResults(path, (datetime.min, datetime.max)))
 
-    plt.legend()
     plt.show()

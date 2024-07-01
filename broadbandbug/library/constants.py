@@ -1,5 +1,6 @@
 from enum import Enum
 
+# TODO: Change format
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
