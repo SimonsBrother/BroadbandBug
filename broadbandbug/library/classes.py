@@ -21,6 +21,11 @@ class Reading:
     timestamp: datetime
     method: constants.RecordingMethod
 
+    @staticmethod
+    # Converts date strings to a datetime
+    def convertStringToDatetime(string: str):
+        return datetime.strptime(string, constants.TIME_FORMAT)
+
 
 def create_logger() -> logging.Logger:
     logger = logging.getLogger(__name__)

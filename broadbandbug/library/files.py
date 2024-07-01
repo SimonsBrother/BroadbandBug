@@ -2,15 +2,19 @@ import csv
 from pathlib import Path
 from datetime import datetime
 
-from broadbandbug.library.classes import Reading
-from broadbandbug.library.constants import TIME_FORMAT
+import classes
+import constants
 
 
 # TODO: Go through everything, make sure all functions are used, make sure documentation is sensible
 
 # TODO: test, make sure this works when compiled
-def ensureFileExists(path: Path):
+def ensure_file_exists(path: Path | str):
     """ Ensure the file at the path provided exists, creating it if it does not. Returns True if it exists. """
+    # Convert from string to path if necessary
+    if isinstance(path, str):
+        path = Path(path)
+
     # Try to read from the file specified.
     exists = path.exists()
     # Create file is it doesn't exist
@@ -23,40 +27,45 @@ def ensureFileExists(path: Path):
     return exists
 
 
-def readResults(csv_path: str, dt_constraints: tuple):
+def read_results(csv_path: str, time_constraints: tuple[datetime] | None, group_by_method: bool):
     """
-    Reads the results stored in the file at csv_path. May raise any errors from open() statement.
-    :param csv_path: path to csv file to read results from
-    :param dt_constraints: a tuple storing two datetime objects to indicate what times to return (from, to)
-    :return: a dictionary of results objects, separating different types of bugs
+    Reads the readings stored in the file at csv_path. May raise any errors from open() statement.
+    :param csv_path: path to csv file to read readings from.
+    :param time_constraints: a tuple storing two datetime objects to indicate what times to return (from, to). Set to None to ignore this constraint.
+    :param group_by_method: set to True to group readings by how they were obtained.
+    :return: a dictionary of readings objects, separating different types of bugs
     """
-
-    results_dict = {}
+    # Create data structure for storing Reading objects - group by method name if necessary, otherwise use a simple list
+    readings = {method.value: [] for method in constants.RecordingMethod} if group_by_method else []
 
     with open(csv_path, "r") as csv_file:
-        reader = csv.reader(csv_file)
+        reader = csv.DictReader(csv_file)
 
-        # Unpack each row into Result object
         for row in reader:
-            result = Reading(*row)
+            row: dict
+            result = create_reading_from_row(row)
 
-            # Convert timestamp to datetime, and check it is in bounds
-            timestamp_dt = datetime.strptime(result.timestamp, TIME_FORMAT)
-            if dt_constraints is None or dt_constraints[0] <= timestamp_dt <= dt_constraints[1]:
-
-                # If the result type has not yet been encountered, make a new category
-                if result.method not in results_dict.keys():
-                    # Add the result to the new list when instantiating the new list
-                    results_dict[result.method] = [result]
-
-                # Otherwise, add the result to the relevant type
+            # Check if timestamp check is needed, and if the timestamp is in bounds (because time constraints is checked first,
+            # lazy eval will prevent the rest of the statement from evaluating and causing an error.
+            if time_constraints is None or time_constraints[0] <= result.timestamp <= time_constraints[1]:
+                if group_by_method:
+                    readings[result.method].append(result)
                 else:
-                    results_dict[result.method].append(result)
+                    readings.append(result)
 
-    return results_dict
+    return readings
 
 
-def resultsWriter(csv_path: str, queue, close_event):
+def create_reading_from_row(row: dict) -> classes.Reading:
+    """ Creates a Reading object from the dict provided - dict must have keys for 'upload', 'download', 'timestamp', and 'method'.
+     For use with a method that gets Readings from a file. """
+    return classes.Reading(float(row["upload"]),
+                           float(row["download"]),
+                           classes.Reading.convertStringToDatetime(row["timestamp"]),
+                           constants.RecordingMethod(row["method"]))
+
+
+def results_writer(csv_path: str, queue, close_event):
     """
     Opens the csv file specified by csv_path, and writes any new records to it from the queue.
     May raise any errors from open() statement. Adapted from various articles from SuperFastPython.com

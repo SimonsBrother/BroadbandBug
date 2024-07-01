@@ -8,9 +8,7 @@ import matplotlib.dates as md
 
 # TODO: go through this again after everything else, check documentation and hints exist where appropriate
 
-# Converts date strings to a datetime - this is here for easy future changes # TODO move to Reading class
-def formatTimeForGraph(string):
-    return datetime.strptime(string, TIME_FORMAT)
+
 
 
 def styleGraph(graph):
@@ -93,11 +91,11 @@ def singlePlot(graph, results_dict: dict):
 
 
 if __name__ == "__main__":
-    from broadbandbug.library.files import readResults
+    from broadbandbug.library.files import read_results
 
     path = "../tests/resources/actual.csv"
 
     styleGraph(plt)
-    singlePlot(plt, readResults(path, (datetime.min, datetime.max)))
+    singlePlot(plt, read_results(path, (datetime.min, datetime.max)))
 
     plt.show()
