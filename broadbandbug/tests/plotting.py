@@ -4,7 +4,7 @@ import broadbandbug.library.files as files
 from matplotlib import pyplot
 
 test_path = "resources/actual.csv"
-files.makeFile(test_path)
+files.ensureFileExists(test_path)
 
 
 def test_methodPlot():

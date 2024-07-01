@@ -1,7 +1,6 @@
 from enum import Enum
 
-# TODO: Change format
-TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+TIME_FORMAT = '%d/%m/%Y %H:%M:%S'
 
 
 class RecordingMethod(Enum):

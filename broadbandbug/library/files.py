@@ -1,37 +1,26 @@
 import csv
-import json
+from pathlib import Path
 from datetime import datetime
 
-from broadbandbug.library.classes import BroadbandReading
+from broadbandbug.library.classes import Reading
 from broadbandbug.library.constants import TIME_FORMAT
 
 
 # TODO: Go through everything, make sure all functions are used, make sure documentation is sensible
 
-# Checks whether the file specified exists, making it if it does not.
-# TODO: maybe use pathlib, make sure this works with compilation, add documentation
-def makeFile(path: str):
-    try:
-        path = open(str(path), "r")
-        path.close()
-        return True
-    except FileNotFoundError:
-        path = open(str(path), "w")
-        path.close()
-        return False
+# TODO: test, make sure this works when compiled
+def ensureFileExists(path: Path):
+    """ Ensure the file at the path provided exists, creating it if it does not. Returns True if it exists. """
+    # Try to read from the file specified.
+    exists = path.exists()
+    # Create file is it doesn't exist
+    if not exists:
+        if path.is_dir():
+            path.mkdir()
+        else:
+            path.touch()
 
-
-# TODO: could prob get rid of this
-def writeResults(csv_path: str, result_obj):
-    """
-    Records results of a speed test to the csv file at the path specified. May raise any errors from open() statement.
-    :param csv_path: path to the csv file to write results to
-    :param result_obj: the results to store, as a Result object
-    """
-
-    with open(csv_path, "a") as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerow([result_obj.download, result_obj.upload, result_obj.timestamp, result_obj.method])
+    return exists
 
 
 def readResults(csv_path: str, dt_constraints: tuple):
@@ -49,7 +38,7 @@ def readResults(csv_path: str, dt_constraints: tuple):
 
         # Unpack each row into Result object
         for row in reader:
-            result = BroadbandReading(*row)
+            result = Reading(*row)
 
             # Convert timestamp to datetime, and check it is in bounds
             timestamp_dt = datetime.strptime(result.timestamp, TIME_FORMAT)
@@ -65,29 +54,6 @@ def readResults(csv_path: str, dt_constraints: tuple):
                     results_dict[result.method].append(result)
 
     return results_dict
-
-
-def writePalette(json_path: str, graph_palettes: dict):
-    """
-    Stores a dictionary of graph color palettes in a json file.
-    :param json_path: path to json file to write graph color palettes to
-    :param graph_palettes: dictionary of GraphPalette objects to store
-    """
-
-    with open(json_path, "w") as json_file:
-        json.dump(graph_palettes, json_file, indent=4)
-
-
-def readPalette(json_path):
-    """
-    Reads the graph color palettes from a json file.
-    :param json_path: path to json file to read from
-    :return: dictionary, with each method as a key, to dictionaries each storing download and upload keys, with their
-    repective color.
-    """
-
-    with open(json_path, "r") as json_file:
-        return json.load(json_file)
 
 
 def resultsWriter(csv_path: str, queue, close_event):

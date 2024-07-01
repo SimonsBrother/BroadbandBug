@@ -1,7 +1,7 @@
 from datetime import datetime
 from time import sleep
 
-from broadbandbug.library.classes import BroadbandReading
+from broadbandbug.library.classes import Reading
 from broadbandbug.library.constants import TIME_FORMAT, RecordingMethod
 METHOD_WHICHWEBSITE = RecordingMethod.WHICH_WEBSITE
 
@@ -56,7 +56,7 @@ def performSpeedTest(driver):
 
     finally:
         timestamp = datetime.now().strftime(TIME_FORMAT)
-        return BroadbandReading(download, upload, timestamp, METHOD_WHICHWEBSITE)
+        return Reading(download, upload, timestamp, METHOD_WHICHWEBSITE)
 
 
 if __name__ == "__main__":

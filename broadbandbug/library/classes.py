@@ -9,7 +9,7 @@ from . import constants
 
 
 @dataclass
-class BroadbandReading:
+class Reading:
     """ Stores the upload and download broadband speed
     :var download: float, test (no specific unit)
     :var upload: float, the upload speed (no specific unit)
@@ -59,7 +59,7 @@ class BaseRecorder:
         return BaseRecorder._results_queue
 
     @staticmethod  # Define as static method because regardless of which class it is from, it should only affect BaseRecorder.
-    def add_result_to_queue(reading: BroadbandReading):
+    def add_result_to_queue(reading: Reading):
         """ Adds a reading to the queue. """
         BaseRecorder._results_queue.put(reading)
 
@@ -74,7 +74,7 @@ class BaseRecorder:
         # Repeat until the recorder is stopped
         while not self.stop_event.is_set():
             # Get new reading
-            reading = BroadbandReading(1, 2, datetime.now(), constants.RecordingMethod.BT_WEBSITE)
+            reading = Reading(1, 2, datetime.now(), constants.RecordingMethod.BT_WEBSITE)
 
             # Add new Result object to queue
             BaseRecorder.add_result_to_queue(reading)
