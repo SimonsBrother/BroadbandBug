@@ -7,7 +7,6 @@ from ..library import files
 
 
 test_path = Path("/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/resources")
-files.ensure_file_exists(test_path)
 
 
 # Manual test to make sure everything works

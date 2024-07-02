@@ -1,24 +1,24 @@
 import csv
 from datetime import datetime
 from pathlib import Path
+from queue import Queue
+from threading import Event
 
 from . import classes
 from . import constants
 
 
-# TODO: test everything
-
-def ensure_file_exists(path: Path | str):
-    """ Ensure the file at the path provided exists, creating it if it does not. Returns True if it exists. """
+def ensure_file_exists(path: Path | str, is_dir: bool):
+    """ Ensure the file at the path provided exists, creating it if it does not. Returns True if it already existed, False if it had to be created. """
     # Convert from string to path if necessary
     if isinstance(path, str):
         path = Path(path)
 
-    # Try to read from the file specified.
     exists = path.exists()
+
     # Create file is it doesn't exist
     if not exists:
-        if path.is_dir():
+        if is_dir:
             path.mkdir()
         else:
             path.touch()
@@ -118,18 +118,18 @@ def sort_by_timestamp(readings: dict | list, group_by_method: bool):
         readings.sort(key=sort)
 
 
-# TODO double check this
-def results_writer(csv_path: str, queue, close_event):
+def results_writer(csv_path: Path | str, queue: Queue, close_event: Event):
     """
     Opens the csv file specified by csv_path, and writes any new records to it from the queue.
     May raise any errors from open() statement. Adapted from various articles from SuperFastPython.com
-    :param csv_path: path to the csv file to write results to
-    :param queue: a Queue object that stores Record objects
-    :param close_event: an Event object that signifies when the function can end - will continue running until queue empty
+    :param csv_path: path to the csv file to write results to.
+    :param queue: a Queue object that stores Record objects.
+    :param close_event: an Event object that indicates when to end - will continue running until queue is empty
     """
     # Open CSV file and initialise writer
     with open(csv_path, "a") as csv_file:
-        writer = csv.writer(csv_file)
+        writer = csv.DictWriter(csv_file, classes.Reading.attributes)
+        writer.writeheader()
 
         # Keep checking if there are results to be stored in the queue to ensure everything added to queue is written,
         # or if the event signifying the end of the program is not triggered
@@ -138,9 +138,10 @@ def results_writer(csv_path: str, queue, close_event):
             if queue.qsize() > 0:
                 # Get next result
                 result_obj = queue.get()
+                result_obj: classes.Reading
                 # Write next result to csv file
-                writer.writerow([result_obj.download, result_obj.upload, result_obj.timestamp, result_obj.method])
-                # Flush buffer ti ensure there is no data to be written
+                writer.writerow(result_obj.format_for_csv())
+                # Flush buffer to ensure there is no data to be written
                 csv_file.flush()
                 # Mark task as done since write is now complete
                 queue.task_done()

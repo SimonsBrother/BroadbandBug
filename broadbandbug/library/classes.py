@@ -4,6 +4,7 @@ from threading import Event
 from queue import Queue
 from datetime import datetime
 import logging
+from typing import ClassVar
 
 from . import constants
 
@@ -21,10 +22,21 @@ class Reading:
     timestamp: datetime
     method: constants.RecordingMethod
 
+    # Used for making header in csv file
+    attributes: ClassVar[list[str]] = ["download", "upload", "timestamp", "method"]
+
+    def get_timestamp_as_str(self):
+        return self.timestamp.strftime(constants.TIME_FORMAT)
+
     @staticmethod
     # Converts date strings to a datetime
     def convert_string_to_datetime(string: str):
         return datetime.strptime(string, constants.TIME_FORMAT)
+
+    def format_for_csv(self):
+        """ Produces a dict in the format needed to save it to a csv file. """
+        return {"download": self.download, "upload": self.upload,
+                "timestamp": self.get_timestamp_as_str(), "method": self.method.value}
 
 
 def create_logger() -> logging.Logger:
@@ -80,7 +92,8 @@ class BaseRecorder:
         # Repeat until the recorder is stopped
         while not self.stop_event.is_set():
             # Get new reading
-            reading = Reading(1, 2, datetime.now(), constants.RecordingMethod.BT_WEBSITE)
+            now = datetime.now()
+            reading = Reading(1, 2, now, constants.RecordingMethod.BT_WEBSITE)
 
             # Add new Result object to queue
             BaseRecorder.add_result_to_queue(reading)
