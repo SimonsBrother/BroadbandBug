@@ -39,7 +39,6 @@ def create_logger() -> logging.Logger:
     return logger
 
 
-# TODO test
 class BaseRecorder:
     # The Queue object used as a buffer for writing to the results file.
     # Multiple recorders may provide data at the same time, so use thread-safe structure like queue.

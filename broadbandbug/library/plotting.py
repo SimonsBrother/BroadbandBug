@@ -1,13 +1,11 @@
 import matplotlib.dates as md
 from matplotlib import pyplot as plt, ticker
 
-import classes
-import constants
+from . import classes
+from . import constants
 
 
-# TODO: test
-
-def prepare_plot(graph):
+def prepare_plot(graph, title="Broadband speed"):
     # Styling
     fig, ax = plt.subplots(facecolor="#0d0433")
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
@@ -26,9 +24,9 @@ def prepare_plot(graph):
     ax.xaxis.set_major_formatter(xfmt)
 
     # Labels
-    graph.xlabel("Time (day/month/yr, hr:min)", color="white")
+    graph.xlabel("Time (day/month/yr hr:min)", color="white")
     graph.ylabel("Megabits/s", color="white")
-    graph.title("Broadband Speed", color="white")  # TODO: custom title
+    graph.title(title, color="white")
 
 
 # Plots
@@ -62,12 +60,11 @@ def ungrouped_plot(graph, readings: list[classes.Reading]):
     graph.legend()
 
 
-def grouped_plot(graph, results_dict: dict, palettes: dict):
+def grouped_plot(graph, results_dict: dict):
     """
     Plots each method as a separate line for upload and download
     :param graph: matplotlib pyplot
     :param results_dict: a dictionary that splits the results by method
-    :param palettes: a dictionary that splits, by method, the colors (in GraphPalette objects) to be used for each line
     """
     for bug_type in results_dict.keys():
         # Get data needed for each graph
@@ -76,22 +73,9 @@ def grouped_plot(graph, results_dict: dict, palettes: dict):
         upload_speeds = [reading.upload for reading in results_dict[bug_type]]
 
         # Plot download
-        graph.plot(timestamps, download_speeds, marker="x", label=f"{bug_type} Download",
-                   color=('#' + palettes[bug_type]["download"]), linewidth=2)
+        graph.plot(timestamps, download_speeds, marker="x", label=f"{bug_type.value} Download", linewidth=2)
 
         # Plot upload
-        graph.plot(timestamps, upload_speeds, marker="+", label=f"{bug_type} Upload",
-                   color=('#' + palettes[bug_type]["upload"]), linewidth=1)
+        graph.plot(timestamps, upload_speeds, marker="+", label=f"{bug_type.value} Upload", linewidth=1)
 
         graph.legend()
-
-
-if __name__ == "__main__":
-    from broadbandbug.library.files import read_results
-
-    path = "../tests/resources/actual.csv"
-
-    prepare_plot(plt)
-    ungrouped_plot(plt, read_results(path, None, False))
-
-    plt.show()

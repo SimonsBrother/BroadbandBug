@@ -1,17 +1,26 @@
-import broadbandbug.library.plotting as plotting
-import broadbandbug.library.files as files
+from pathlib import Path
 
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
 
-test_path = "resources/actual.csv"
+from ..library import plotting
+from ..library import files
+
+
+test_path = Path("/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/resources")
 files.ensure_file_exists(test_path)
 
 
-def test_methodPlot():
-    results = files.read_results(test_path, None)
+# Manual test to make sure everything works
+def test_graph():
+    ungrouped_results = files.read_results(test_path / "artificial.csv", None, False)
+    grouped_results = files.read_results(test_path / "artificial.csv", None, True)
 
-    plotting.styleGraph(pyplot)
-    plotting.singlePlot(pyplot, results)
+    # Ungrouped plot
+    plotting.prepare_plot(plt, "Test ungrouped plot")
+    plotting.ungrouped_plot(plt, ungrouped_results)
+    plt.show()
 
-    pyplot.legend()
-    pyplot.show()
+    # Grouped plot
+    plotting.prepare_plot(plt, "Test grouped plot")
+    plotting.grouped_plot(plt, grouped_results)
+    plt.show()

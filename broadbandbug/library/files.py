@@ -2,8 +2,8 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
-import classes
-import constants
+from . import classes
+from . import constants
 
 
 # TODO: test, make sure this works when compiled
@@ -25,7 +25,7 @@ def ensure_file_exists(path: Path | str):
     return exists
 
 
-def read_results(csv_path: str, time_constraints: tuple[datetime, datetime] | None, group_by_method: bool) -> dict | list:
+def read_results(csv_path: Path | str, time_constraints: tuple[datetime, datetime] | None, group_by_method: bool) -> dict | list:
     """
     Reads the broadband readings stored in the file at csv_path. May raise any errors from open() statement.
     :param csv_path: path to csv file to read broadband readings from.
@@ -34,7 +34,7 @@ def read_results(csv_path: str, time_constraints: tuple[datetime, datetime] | No
     :return: a dict if group_by_method is True, where each key is a method, linked with a list of Reading objects. Otherwise, returns a list of Reading objects.
     """
     # Create data structure for storing Reading objects - group by method name if necessary, otherwise use a simple list
-    readings = {method.value: [] for method in constants.RecordingMethod} if group_by_method else []
+    readings = {method: [] for method in constants.RecordingMethod} if group_by_method else []
 
     with open(csv_path, "r") as csv_file:
         reader = csv.DictReader(csv_file)
@@ -52,6 +52,12 @@ def read_results(csv_path: str, time_constraints: tuple[datetime, datetime] | No
                 else:
                     readings.append(result)
 
+    if group_by_method:
+        prune_unused_groups(readings)
+
+    # Sort by timestamp, in case the data from csv is out of order
+    sort_by_timestamp(readings, group_by_method)
+
     return readings
 
 
@@ -64,6 +70,35 @@ def create_reading_from_row(row: dict) -> classes.Reading:
                            constants.RecordingMethod(row["method"]))
 
 
+def prune_unused_groups(readings: dict):
+    """ Removes groups that have no readings - this looks nicer on the graph. """
+    # Get a list of unused methods - an unused method will not have readings in the list
+    unused_methods = []
+    for method, group_of_readings in readings.items():
+        if len(group_of_readings) == 0:
+            unused_methods.append(method)
+
+    # Delete each unused key separately, to prevent the readings dict from changing when it is being iterated
+    for method in unused_methods:
+        readings.pop(method)
+
+
+def sort_by_timestamp(readings: dict | list, group_by_method: bool):
+    """ For ungrouped, sorts all the readings by timestamp, for grouped, sorts all the readings within each group by timestamp.
+    For use with a method that gets readings from a file. """
+    def sort(reading: classes.Reading):
+        return reading.timestamp
+
+    if group_by_method:
+        # Sort within each method
+        for method in readings.keys():
+            readings[method].sort(key=sort)
+    else:
+        # Sort all readings
+        readings.sort(key=sort)
+
+
+# TODO double check this
 def results_writer(csv_path: str, queue, close_event):
     """
     Opens the csv file specified by csv_path, and writes any new records to it from the queue.

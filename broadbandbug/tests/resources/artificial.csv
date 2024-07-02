@@ -1,0 +1,19 @@
+download,upload,timestamp,method
+10,5,23/06/2023 00:00:00,Speedtest CLI
+20,10,24/06/2023 00:00:00,Speedtest CLI
+30,10,25/06/2023 00:00:00,Speedtest CLI
+0,0,26/06/2023 00:00:00,Speedtest CLI
+25,15,27/06/2023 00:00:00,Speedtest CLI
+
+0,0,27/06/2023 00:00:5,Speedtest CLI
+80,10,28/06/2023 00:00:00,Speedtest CLI
+
+40,25,23/06/2023 00:00:00,Which? Website
+50,30,24/06/2023 00:00:00,Which? Website
+30,20,25/06/2023 00:00:00,Which? Website
+70,45,26/06/2023 00:00:00,Which? Website
+
+20,10,29/06/2023 00:00:00,Speedtest CLI
+30,10,29/06/2023 00:00:00,Which? Website
+10,10,30/06/2023 00:00:00,Speedtest CLI
+20,15,30/06/2023 00:00:00,Which? Website
