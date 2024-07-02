@@ -6,7 +6,8 @@ from . import classes
 from . import constants
 
 
-# TODO: test, make sure this works when compiled
+# TODO: test everything
+
 def ensure_file_exists(path: Path | str):
     """ Ensure the file at the path provided exists, creating it if it does not. Returns True if it exists. """
     # Convert from string to path if necessary
@@ -39,18 +40,22 @@ def read_results(csv_path: Path | str, time_constraints: tuple[datetime, datetim
     with open(csv_path, "r") as csv_file:
         reader = csv.DictReader(csv_file)
 
-        for row in reader:
-            row: dict
-            result = create_reading_from_row(row)
+        row: dict  # Specify row is a dict, to help PyCharm
 
-            # Check if timestamp check is needed, and if the timestamp is in bounds (because time constraints is checked first,
-            # lazy eval will prevent the rest of the statement from evaluating and causing an error.
-            if time_constraints is None or time_constraints[0] <= result.timestamp <= time_constraints[1]:
-                # TODO: minor optimisation: use two separate for loops contained in if statements
-                if group_by_method:
-                    readings[result.method].append(result)
-                else:
-                    readings.append(result)
+        # Rather than considering whether to group by method within the for loop, which would be more readable,
+        # I have used 2 for loops running similar code, so that the if statement is not re-evaluated repeatedly,
+        # which should be slightly faster.
+        if group_by_method:
+            for row in reader:
+                reading = create_reading_from_row(row)
+                if include_reading(reading, time_constraints):
+                    readings[reading.method].append(reading)
+
+        else:
+            for row in reader:
+                reading = create_reading_from_row(row)
+                if include_reading(reading, time_constraints):
+                    readings.append(reading)
 
     if group_by_method:
         prune_unused_groups(readings)
@@ -61,6 +66,7 @@ def read_results(csv_path: Path | str, time_constraints: tuple[datetime, datetim
     return readings
 
 
+# Used by include_reading, implicitly tested by it
 def create_reading_from_row(row: dict) -> classes.Reading:
     """ Creates a Reading object from the dict provided - dict must have keys for 'upload', 'download', 'timestamp', and 'method'.
      For use with a method that gets Readings from a file. """
@@ -70,6 +76,19 @@ def create_reading_from_row(row: dict) -> classes.Reading:
                            constants.RecordingMethod(row["method"]))
 
 
+# Used by include_reading, implicitly tested by it
+def include_reading(reading: classes.Reading, time_constraints: tuple[datetime, datetime] | None):
+    """ Checks if the reading passed to this function should be included in a graph, given certain constraints.
+    :param reading: the reading to evaluate.
+    :param time_constraints: two datetime objects that the constraint timestamp should be within or equal to - alternatively, None indicates no constraints.
+    :return: True if the reading data is within the constraints.
+    """
+    # Check if timestamp check is needed, and if the timestamp is in bounds (because time constraints is checked first,
+    # lazy eval will prevent the rest of the statement from evaluating and causing an error.
+    return time_constraints is None or time_constraints[0] <= reading.timestamp <= time_constraints[1]
+
+
+# Used by include_reading, implicitly tested by it
 def prune_unused_groups(readings: dict):
     """ Removes groups that have no readings - this looks nicer on the graph. """
     # Get a list of unused methods - an unused method will not have readings in the list
@@ -83,6 +102,7 @@ def prune_unused_groups(readings: dict):
         readings.pop(method)
 
 
+# Used by include_reading, implicitly tested by it
 def sort_by_timestamp(readings: dict | list, group_by_method: bool):
     """ For ungrouped, sorts all the readings by timestamp, for grouped, sorts all the readings within each group by timestamp.
     For use with a method that gets readings from a file. """

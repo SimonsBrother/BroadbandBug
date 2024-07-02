@@ -12,15 +12,14 @@ files.ensure_file_exists(test_path)
 
 # Manual test to make sure everything works
 def test_graph():
-    ungrouped_results = files.read_results(test_path / "artificial.csv", None, False)
-    grouped_results = files.read_results(test_path / "artificial.csv", None, True)
-
     # Ungrouped plot
+    ungrouped_results = files.read_results(test_path / "artificial.csv", None, False)
     plotting.prepare_plot(plt, "Test ungrouped plot")
     plotting.ungrouped_plot(plt, ungrouped_results)
     plt.show()
 
     # Grouped plot
+    grouped_results = files.read_results(test_path / "artificial.csv", None, True)
     plotting.prepare_plot(plt, "Test grouped plot")
     plotting.grouped_plot(plt, grouped_results)
     plt.show()
