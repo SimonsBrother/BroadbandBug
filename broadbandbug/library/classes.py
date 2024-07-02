@@ -5,13 +5,13 @@ from queue import Queue
 from datetime import datetime
 import logging
 
-import constants
+from . import constants
 
 
 @dataclass
 class Reading:
     """ Stores the upload and download broadband speed
-    :var download: float, test (no specific unit)
+    :var download: float, the download speed (no specific unit)
     :var upload: float, the upload speed (no specific unit)
     :var timestamp: datetime, when the reading was obtained.
     :var method: RecordingMethod, the method by which this reading was obtained.
@@ -56,6 +56,7 @@ class BaseRecorder:
 
         self.stop_event = Event()  # This can be set to indicate when the recorder should be stopped.
         self.future = None  # This represents the asynchronous execution of the recording_loop
+        BaseRecorder.get_logger().info(f"Created {identifier}")
 
     # Getters and setters for queue
     @staticmethod
@@ -75,6 +76,7 @@ class BaseRecorder:
 
     # This function is to overridden and passed on to the thread executor. It is here as a demonstration only.
     def recording_loop(self):
+        """ Repeatedly takes a reading and adds it to the queue. """
         BaseRecorder.get_logger().warning("USING BASE CLASS - FOR TESTING PURPOSES ONLY")
         # Repeat until the recorder is stopped
         while not self.stop_event.is_set():
@@ -85,17 +87,17 @@ class BaseRecorder:
             BaseRecorder.add_result_to_queue(reading)
 
         # Log that the recorder has stopped.
-        BaseRecorder.get_logger().info("{self.identifier} has stopped.")
+        BaseRecorder.get_logger().info(f"Recorder '{self.identifier}' has stopped.")
 
     def start_recording(self, threadpool_executor):
         """ Starts the recorder by submitting the recording function to the threadpool executor passed. """
         # Submit the new BaseRecorder object's recording_loop function to executor, and set the BaseRecorder's future
         self.future = threadpool_executor.submit(self.recording_loop)
-        BaseRecorder.get_logger().info(f"{self.identifier} has started.")
+        BaseRecorder.get_logger().info(f"Recorder '{self.identifier}' has started.")
 
     def stop_recording(self):
-        BaseRecorder.get_logger().info(f"Stopping {self.identifier}...")
+        BaseRecorder.get_logger().info(f"Stopping '{self.identifier}'...")
         self.stop_event.set()
 
     def __repr__(self):
-        return f"{type(self)} {self.identifier!r} ({'stopped' if self.stop_event.is_set() else 'active'})"
+        return f"{type(self).__name__} {self.identifier!r} ({'stopped' if self.stop_event.is_set() else 'active'})"

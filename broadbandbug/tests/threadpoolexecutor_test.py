@@ -1,3 +1,4 @@
+# TODO go through this and check if its necessary
 # SuperFastPython.com
 # example of thread-safe writing to a file with a dedicated writer thread
 from random import random
