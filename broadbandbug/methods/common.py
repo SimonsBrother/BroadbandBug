@@ -1,3 +1,4 @@
+""" Stores general functions to assist with recorders. """
 import broadbandbug.library.constants as consts
 import broadbandbug.methods.speedtestcli as speedtestcli
 import broadbandbug.methods.which_website as which_website
@@ -15,6 +16,10 @@ def makeEdgeWebDriver(timeout=10):
     driver = webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()))
     driver.implicitly_wait(timeout)
     return driver
+
+# Converts from bits/s to megabits/s. TODO snake case
+def convertToMbs(bps):
+    return float(bps) / 1_000_000
 
 
 def determineMethodFunction(method_name, preferred_driver):

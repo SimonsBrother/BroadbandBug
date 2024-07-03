@@ -15,3 +15,4 @@ class Browser(Enum):
 
 
 METHODS_USING_BROWSER = (RecordingMethod.BT_WEBSITE, RecordingMethod.WHICH_WEBSITE)
+TIMEOUT = 30  # How long speedtest cli recorder should wait when the network goes down before trying another test
