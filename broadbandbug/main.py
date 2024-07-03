@@ -7,7 +7,12 @@ import concurrent.futures as futures
 
 from library.files import results_writer
 
+# TODO fully implement GUI
+# TODO make and check methods
+# TODO put everything together in main
 
+
+# TODO double check this, explain why its here
 def get_current_dir():
     """ NOT MY OWN WORK.
     SOURCE: https://stackoverflow.com/questions/404744/determining-application-path-in-a-python-exe-generated-by-pyinstaller

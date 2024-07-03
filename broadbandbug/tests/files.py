@@ -61,6 +61,7 @@ def test_efe_dir_doesnt_exist():
 # read_results is tested by plotting tests.
 
 
+# Manual test - run it and check resources dir
 def test_results_writer():
     results_writer_test_file = test_path / "results_writer_test_file.csv"
     files.ensure_file_exists(results_writer_test_file, False)

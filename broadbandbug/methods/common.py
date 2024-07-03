@@ -3,24 +3,10 @@ import broadbandbug.methods.speedtestcli as speedtestcli
 import broadbandbug.methods.which_website as which_website
 
 import speedtest
-
-
-# Webdriver imports
 from selenium import webdriver
-
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
 
 from selenium.webdriver.edge.service import Service as EdgeService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
-
-
-# Configures a Chrome WebDriver
-def makeChromeWebDriver(timeout=10):
-    # Setup driver
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
-    driver.implicitly_wait(timeout)
-    return driver
 
 
 # Configures a Chrome WebDriver
