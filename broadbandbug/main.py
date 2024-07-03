@@ -8,7 +8,7 @@ import concurrent.futures as futures
 from library.files import results_writer
 
 # TODO fully implement GUI
-# TODO make and check methods
+# TODO make and check recorders
 # TODO put everything together in main
 
 

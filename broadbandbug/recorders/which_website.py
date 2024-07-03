@@ -60,7 +60,7 @@ def performSpeedTest(driver):
 
 
 if __name__ == "__main__":
-    from broadbandbug.methods.common import makeChromeWebDriver
+    from broadbandbug.recorders.common import makeChromeWebDriver
 
     wd = makeChromeWebDriver()
     setupWebsite(wd)

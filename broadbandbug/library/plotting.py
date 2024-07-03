@@ -32,7 +32,7 @@ def prepare_plot(graph, title="Broadband speed"):
 # Plots
 def ungrouped_plot(graph, readings: list[classes.Reading]):
     """
-    Plots a line for download and upload, as a single plot merging data from all methods
+    Plots a line for download and upload, as a single plot merging data from all recorders
     :param graph: matplotlib pyplot.
     :param readings: a list of Reading objects to plot a graph of.
     """
