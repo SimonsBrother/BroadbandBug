@@ -19,7 +19,7 @@ class SpeedtestCLIRecorder(BaseRecorder):
         while not self.stop_event.is_set():
             # Perform speed test
             self.speedtest_obj.download(threads=1)  # Using None for threads breaks stuff. It works like this.
-            if self.stop_event.is_set(): break
+            if self.stop_event.is_set(): break  # Causes the speedtest to stop where possible, in a controlled way
             self.speedtest_obj.upload(threads=1)
 
             # Make reading
