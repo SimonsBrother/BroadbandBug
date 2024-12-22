@@ -38,9 +38,9 @@ def read_results(csv_path: Path | str, time_constraints: tuple[datetime, datetim
     :return: a dict if group_by_method is True, where each key is a method, linked with a list of Reading objects.
     Otherwise, returns a list of Reading objects.
     """
-    # TODO simplify by just using a dictionary all the time
     # Create data structure for storing Reading objects - group by method name if necessary, otherwise use a simple list
-    readings = {method: [] for method in constants.RecordingMethod} if group_by_method else []
+    readings = {method: [] for method in constants.RecordingMethod} if group_by_method\
+        else []
 
     with open(csv_path, "r") as csv_file:
         reader = csv.DictReader(csv_file)

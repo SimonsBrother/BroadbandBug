@@ -1,4 +1,6 @@
 import sys
+from datetime import datetime
+
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
                              QVBoxLayout, QPushButton, QDateTimeEdit, QCheckBox,
                              QLabel, QFormLayout, QHBoxLayout)
@@ -6,17 +8,19 @@ from PyQt6.QtCore import QDateTime, Qt
 from PyQt6.QtGui import QFont
 
 import broadbandbug.library.files as files
+import broadbandbug.library.constants as constants
+import broadbandbug.library.plotting as plotting
 
 
-class RecordingApp(QMainWindow):
-    def __init__(self):
+class MainWindow(QMainWindow):
+    def __init__(self, pyplot):
         super().__init__()
         self.setWindowTitle("Recording and Graphing Application")
 
         # Create a much larger font
         app_font = QFont()
         app_font.setPointSize(18)  # Substantially increased font size
-        QApplication.setFont(app_font)
+        #QApplication.setFont(app_font)
 
         # Create main tab widget
         self.tab_widget = QTabWidget()
@@ -59,6 +63,18 @@ class RecordingApp(QMainWindow):
         self.graph_tab = QWidget()
         self.graph_layout = QFormLayout()
 
+        limit_by_time_box = QVBoxLayout()
+        # Set Current Time Button
+        self.limit_by_time_checkbox = QCheckBox("Limit by time")
+        self.limit_by_time_checkbox.setFixedSize(self.limit_by_time_checkbox.sizeHint())
+        self.limit_by_time_checkbox.setChecked(True)
+        self.limit_by_time_checkbox.stateChanged.connect(self.update_times)
+        # Center the checkbox
+        limit_by_time_box.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        limit_by_time_box.addWidget(self.limit_by_time_checkbox)
+
+        self.graph_layout.addRow(limit_by_time_box)
+
         # Start DateTime Edit
         self.start_datetime_label = QLabel("Start date and time:")
         self.start_datetime = QDateTimeEdit()
@@ -67,7 +83,6 @@ class RecordingApp(QMainWindow):
         self.start_datetime.setDateTime(QDateTime.currentDateTime())
         self.start_datetime.setFixedSize(self.start_datetime.sizeHint())
         self.graph_layout.addRow(self.start_datetime_label, self.start_datetime)
-
         # End DateTime Edit
         self.end_datetime_label = QLabel("End date and time:")
         self.end_datetime = QDateTimeEdit()
@@ -77,20 +92,6 @@ class RecordingApp(QMainWindow):
         self.end_datetime.setFixedSize(self.end_datetime.sizeHint())
         self.graph_layout.addRow(self.end_datetime_label, self.end_datetime)
 
-        # Vertical layout for buttons
-        datetime_button_layout = QVBoxLayout()
-
-        # Set Current Time Button
-        self.set_current_time_button = QPushButton("Autofill times")
-        self.set_current_time_button.clicked.connect(self.autofill_times)
-
-        # Make the button the same width as other buttons
-        self.set_current_time_button.setFixedWidth(button_width)
-
-        # Center the button
-        datetime_button_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        datetime_button_layout.addWidget(self.set_current_time_button)
-
         # Merge Method Checkbox
         self.merge_method_checkbox = QCheckBox("Merge method readings")
         self.merge_method_checkbox.setFixedSize(self.merge_method_checkbox.sizeHint())
@@ -98,9 +99,9 @@ class RecordingApp(QMainWindow):
         # Plot Graph Button
         self.plot_graph_button = QPushButton("Plot graph")
         self.plot_graph_button.setFixedSize(self.plot_graph_button.sizeHint())
+        self.plot_graph_button.clicked.connect(self.show_graph)
 
         # Add layouts and widgets to graph layout
-        self.graph_layout.addRow(datetime_button_layout)
         self.graph_layout.addRow(self.merge_method_checkbox)
         self.graph_layout.addRow(self.plot_graph_button)
 
@@ -110,14 +111,9 @@ class RecordingApp(QMainWindow):
         # Adjust window size to fit contents
         self.adjustSize()
 
-        self.autofill_times()
-
-    def autofill_times(self):
-        # TODO Get first and last entry
-
-        current_time = QDateTime.currentDateTime()
-        self.start_datetime.setDateTime(current_time)
-        self.end_datetime.setDateTime(current_time)
+        # Prepare graph
+        self.pyplot = pyplot
+        plotting.prepare_plot(self.pyplot)
 
     def on_start_recording(self):
         # Disable start button and enable pause button
@@ -129,10 +125,29 @@ class RecordingApp(QMainWindow):
         self.pause_button.setEnabled(False)
         self.start_button.setEnabled(True)
 
+    def update_times(self):
+        checked = self.limit_by_time_checkbox.isChecked()
+        self.start_datetime.setEnabled(checked)
+        self.end_datetime.setEnabled(checked)
+
+    def show_graph(self):
+        merge_methods = self.merge_method_checkbox.isChecked()
+        if self.limit_by_time_checkbox.isChecked():
+            time_constraints = (self.start_datetime.dateTime().toPyDateTime(), self.end_datetime.dateTime().toPyDateTime())
+        else:
+            time_constraints = (datetime.min, datetime.max)
+
+        readings = files.read_results(constants.RECORDING_DEFAULT_PATH, time_constraints, merge_methods)
+
+        if merge_methods:
+            plotting.ungrouped_plot(self.pyplot, readings)
+        else:
+            plotting.grouped_plot(self.pyplot, readings)
+
 
 def main():
     app = QApplication(sys.argv)
-    window = RecordingApp()
+    window = MainWindow()
     window.show()
     sys.exit(app.exec())
 

@@ -1,7 +1,8 @@
 from enum import Enum
+from pathlib import Path
 
 TIME_FORMAT = '%d/%m/%Y %H:%M:%S'
-
+RECORDING_DEFAULT_PATH = Path("./RECORDING.csv")
 
 class RecordingMethod(Enum):
     SPEEDTEST_CLI = "Speedtest CLI"

@@ -2,11 +2,11 @@ from pathlib import Path
 
 from matplotlib import pyplot as plt
 
-from ..library import plotting
-from ..library import files
+import broadbandbug.library.plotting as plotting
+import broadbandbug.library.files as files
 
 
-test_path = Path("/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/resources")
+test_path = Path("./resources")
 
 
 # Manual test to make sure everything works
@@ -22,3 +22,6 @@ def test_graph():
     plotting.prepare_plot(plt, "Test grouped plot")
     plotting.grouped_plot(plt, grouped_results)
     plt.show()
+
+if __name__ == "__main__":
+    test_graph()
