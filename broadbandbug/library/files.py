@@ -1,3 +1,4 @@
+""" TODO document """
 import csv
 from datetime import datetime
 from pathlib import Path
@@ -16,7 +17,7 @@ def ensure_file_exists(path: Path | str, is_dir: bool):
 
     exists = path.exists()
 
-    # Create file is it doesn't exist
+    # Create file or directory is it doesn't exist
     if not exists:
         if is_dir:
             path.mkdir()
@@ -28,12 +29,16 @@ def ensure_file_exists(path: Path | str, is_dir: bool):
 
 def read_results(csv_path: Path | str, time_constraints: tuple[datetime, datetime] | None, group_by_method: bool) -> dict | list:
     """
-    Reads the broadband readings stored in the file at csv_path. May raise any errors from open() statement.
+    Reads the broadband readings stored in the file at csv_path.
+        May raise any errors from an open() statement, or if csv_path refers to a file that is not a CSV file.
     :param csv_path: path to csv file to read broadband readings from.
-    :param time_constraints: a tuple storing two datetime objects to indicate what times to return (from, to). Set to None to ignore this constraint.
+    :param time_constraints: a tuple storing two datetime objects to indicate what times to return (from, to).
+    Set to None to ignore this constraint.
     :param group_by_method: set to True to group readings by how they were obtained.
-    :return: a dict if group_by_method is True, where each key is a method, linked with a list of Reading objects. Otherwise, returns a list of Reading objects.
+    :return: a dict if group_by_method is True, where each key is a method, linked with a list of Reading objects.
+    Otherwise, returns a list of Reading objects.
     """
+    # TODO simplify by just using a dictionary all the time
     # Create data structure for storing Reading objects - group by method name if necessary, otherwise use a simple list
     readings = {method: [] for method in constants.RecordingMethod} if group_by_method else []
 

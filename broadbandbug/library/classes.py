@@ -52,11 +52,10 @@ def create_logger() -> logging.Logger:
 
 
 class BaseRecorder:
-    # The Queue object used as a buffer for writing to the results file.
+    _results_queue = Queue()  # The Queue object used as a buffer for writing to the results file.
     # Multiple recorders may provide data at the same time, so use thread-safe structure like queue.
     # Hidden via underscore because only the BaseRecorder results attribute should be accessed (since modifying the superclass
     # attribute will modify the child class static attributes, but modifying the child attributes will not affect the parent.
-    _results_queue = Queue()
     _logger = create_logger()
 
     def __init__(self, identifier: str):
@@ -88,7 +87,7 @@ class BaseRecorder:
     # This function is to overridden and passed on to the thread executor. It is here as a demonstration only.
     def recording_loop(self):
         """ Repeatedly takes a reading and adds it to the queue. """
-        BaseRecorder.get_logger().warning("USING BASE CLASS - FOR TESTING PURPOSES ONLY")
+        BaseRecorder.get_logger().warning("USING BASE CLASS, WHICH IS FOR TESTING PURPOSES ONLY")
         # Repeat until the recorder is stopped
         while not self.stop_event.is_set():
             # Get new reading
