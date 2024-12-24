@@ -59,7 +59,7 @@ def test_base_recorder():
     with futures.ThreadPoolExecutor(2) as exe:
         base_rec.start_recording(exe)
         sleep(0.2)
-        base_rec.stop_recording()
+        base_rec.send_stop_signal()
 
     # Check successfully added Readings to queue
     assert classes.BaseRecorder.get_results_queue().qsize() > 0

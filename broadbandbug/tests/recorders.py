@@ -11,13 +11,11 @@ def speedtest_cli():
         rec = SpeedtestCLIRecorder("Speedtest CLI test")
         rec.start_recording(threadpool_exe)
         sleep(120)
-        rec.stop_recording()
-        try:
-            while True:
-                i = rec.get_results_queue().get(timeout=5)
-                print(i)
-        except Empty:
-            ...
+        print("Stopping")
+        rec.send_stop_signal()
+        results = rec.get_readings_queue()
+        while not results.empty():
+            print(results.get())
 
 
 if __name__ == '__main__':

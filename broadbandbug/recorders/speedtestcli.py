@@ -11,7 +11,7 @@ from broadbandbug.recorders.common import convert_to_mbs
 class SpeedtestCLIRecorder(BaseRecorder):
     def __init__(self, identifier: str):
         super().__init__(identifier)
-        self.speedtest_obj = speedtest.Speedtest()
+        self.speedtest_obj = speedtest.Speedtest(secure=True)
         self.speedtest_obj.get_best_server([])
 
     def recording_loop(self):
@@ -45,5 +45,4 @@ class SpeedtestCLIRecorder(BaseRecorder):
                         self.get_logger().info("Interrupting timeout.")
                         break
 
-        # Log that the recorder has stopped.
-        BaseRecorder.get_logger().info(f"Recorder '{self.identifier}' has stopped.")
+        self.confirm_stopped()

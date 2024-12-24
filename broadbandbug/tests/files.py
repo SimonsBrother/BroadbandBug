@@ -79,7 +79,7 @@ def test_results_writer():
         sleep(0.01)
 
         # Stop everything
-        base_rec.stop_recording()
+        base_rec.send_stop_signal()
         close_event.set()
 
         # Let writer finish
