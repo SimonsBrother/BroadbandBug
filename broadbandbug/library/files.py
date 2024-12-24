@@ -27,20 +27,19 @@ def ensure_file_exists(path: Path | str, is_dir: bool):
     return exists
 
 
-def read_results(csv_path: Path | str, time_constraints: tuple[datetime, datetime] | None, group_by_method: bool) -> dict | list:
+def read_results(csv_path: Path | str, time_constraints: tuple[datetime, datetime] | None, merge_methods: bool) -> dict | list:
     """
     Reads the broadband readings stored in the file at csv_path.
         May raise any errors from an open() statement, or if csv_path refers to a file that is not a CSV file.
     :param csv_path: path to csv file to read broadband readings from.
     :param time_constraints: a tuple storing two datetime objects to indicate what times to return (from, to).
     Set to None to ignore this constraint.
-    :param group_by_method: set to True to group readings by how they were obtained.
+    :param merge_methods: set to True to merge readings from different methods into one line.
     :return: a dict if group_by_method is True, where each key is a method, linked with a list of Reading objects.
     Otherwise, returns a list of Reading objects.
     """
     # Create data structure for storing Reading objects - group by method name if necessary, otherwise use a simple list
-    readings = {method: [] for method in constants.RecordingMethod} if group_by_method\
-        else []
+    readings = [] if merge_methods else {method: [] for method in constants.RecordingMethod}
 
     with open(csv_path, "r") as csv_file:
         reader = csv.DictReader(csv_file)
@@ -50,23 +49,21 @@ def read_results(csv_path: Path | str, time_constraints: tuple[datetime, datetim
         # Rather than considering whether to group by method within the for loop, which would be more readable,
         # I have used 2 for loops running similar code, so that the if statement is not re-evaluated repeatedly,
         # which should be slightly faster.
-        if group_by_method:
-            for row in reader:
-                reading = create_reading_from_row(row)
-                if include_reading(reading, time_constraints):
-                    readings[reading.method].append(reading)
-
-        else:
+        if merge_methods:
             for row in reader:
                 reading = create_reading_from_row(row)
                 if include_reading(reading, time_constraints):
                     readings.append(reading)
 
-    if group_by_method:
-        prune_unused_groups(readings)
+        else:
+            for row in reader:
+                reading = create_reading_from_row(row)
+                if include_reading(reading, time_constraints):
+                    readings[reading.method].append(reading)
+            prune_unused_groups(readings)
 
     # Sort by timestamp, in case the data from csv is out of order
-    sort_by_timestamp(readings, group_by_method)
+    sort_by_timestamp(readings)
 
     return readings
 
@@ -108,19 +105,19 @@ def prune_unused_groups(readings: dict):
 
 
 # Used by include_reading, implicitly tested by it
-def sort_by_timestamp(readings: dict | list, group_by_method: bool):
-    """ For ungrouped, sorts all the readings by timestamp, for grouped, sorts all the readings within each group by timestamp.
+def sort_by_timestamp(readings: dict | list):
+    """ For merged, sorts all the readings by timestamp, for unmerged, sorts all the readings within each group by timestamp.
     For use with a method that gets readings from a file. """
     def sort(reading: classes.Reading):
         return reading.timestamp
 
-    if group_by_method:
+    if isinstance(readings, list):
+        # Sort all readings
+        readings.sort(key=sort)
+    elif isinstance(readings, dict):
         # Sort within each method
         for method in readings.keys():
             readings[method].sort(key=sort)
-    else:
-        # Sort all readings
-        readings.sort(key=sort)
 
 
 def results_writer(csv_path: Path | str, queue: Queue, close_event: Event):

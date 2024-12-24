@@ -1,23 +1,27 @@
-#from queue import Queue
+from datetime import datetime
 from queue import Queue
 
-from PyQt6 import QtCore, QtWidgets
+from PyQt6 import QtCore
 import pyqtgraph as pg
+from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 from broadbandbug.library import constants
 from broadbandbug.library.classes import Reading
 from broadbandbug.library.constants import RecordingMethod
 
 
-# TODO look into using abc.ABC (abstract class) with this class
-class GraphWindow(QtWidgets.QMainWindow):
+# TODO bug: plotting graphs does not consider the time the reading was taken; as such, solstice/equinox times may be an hour inaccurate
+class GraphWindow(QWidget):
     REFRESH_INTERVAL_MS = 1000 * 10
 
-    def __init__(self, new_readings: Queue[Reading]):
+    def __init__(self, new_readings: Queue[Reading], time_constraints: tuple[datetime] | None):
         super().__init__()
-
+        layout = QVBoxLayout()
         self.graph = pg.PlotWidget()
-        self.setCentralWidget(self.graph)
+        layout.addWidget(self.graph)
+        self.setLayout(layout)
+
+        self.time_constraints = time_constraints
 
         self.graph.setBackground("#ffffff")
         styles = {"color": "red", "font-size": "18px"}
@@ -52,10 +56,16 @@ class GraphWindow(QtWidgets.QMainWindow):
         window.show()
         app.exec()
 
-# TODO make graphs not update for values outside of the limits
+    def is_reading_within_time_constraints(self, reading: Reading) -> bool:
+        # Check if timestamp check is needed, and if the timestamp is in bounds (because time constraints is checked first,
+        # lazy eval will prevent the rest of the statement from evaluating and causing an error.
+        return (self.time_constraints is None
+                or self.time_constraints[0] <= reading.timestamp <= self.time_constraints[1])
+
+
 class MergedGraphWindow(GraphWindow):
-    def __init__(self, readings: list[Reading], new_readings: Queue):
-        super().__init__(new_readings)
+    def __init__(self, readings: list[Reading], new_readings: Queue, time_constraints: tuple[datetime] | None):
+        super().__init__(new_readings, time_constraints)
         self.setWindowTitle("Merged Graph")
 
         # Initialise lists to store all the data
@@ -94,6 +104,8 @@ class MergedGraphWindow(GraphWindow):
         updated = False
         while not self.new_readings.empty():
             reading = self.new_readings.get()
+            if not self.is_reading_within_time_constraints(reading):  # Skip if reading out of time constraints
+                continue
             self.download_speeds.append(reading.download)
             self.upload_speeds.append(reading.upload)
             self.timestamps.append(reading.timestamp.timestamp())
@@ -103,9 +115,10 @@ class MergedGraphWindow(GraphWindow):
             self.download_line.setData(self.timestamps, self.download_speeds)
             self.upload_line.setData(self.timestamps, self.upload_speeds)
 
+
 class UnmergedGraphWindow(GraphWindow):
-    def __init__(self, readings: dict, new_readings: Queue):
-        super().__init__(new_readings)
+    def __init__(self, readings: dict, new_readings: Queue, time_constraints: tuple[datetime] | None):
+        super().__init__(new_readings, time_constraints)
         self.setWindowTitle("Unmerged Graph")
 
         # This structure stores
@@ -122,8 +135,6 @@ class UnmergedGraphWindow(GraphWindow):
             recording_method_data["down_data"] = download_speeds
             recording_method_data["up_data"] = upload_speeds
             recording_method_data["timestamps"] = timestamps
-
-            # Plot lines
 
             self.initialise_graphs(recording_method)
 
@@ -156,6 +167,8 @@ class UnmergedGraphWindow(GraphWindow):
         updated = []
         while not self.new_readings.empty():
             reading = self.new_readings.get()
+            if not self.is_reading_within_time_constraints(reading):  # Skip if reading out of time constraints
+                continue
             line = self.lines[reading.method]
             line["down_data"].append(reading.download)
             line["up_data"].append(reading.upload)

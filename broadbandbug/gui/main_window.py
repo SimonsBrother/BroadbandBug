@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime
+from queue import Queue
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
                              QVBoxLayout, QPushButton, QDateTimeEdit, QCheckBox,
@@ -9,17 +9,19 @@ from PyQt6.QtGui import QFont
 
 import broadbandbug.library.files as files
 import broadbandbug.library.constants as constants
+from broadbandbug.gui.graph_windows import MergedGraphWindow, UnmergedGraphWindow
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, pyplot):
+    def __init__(self):
         super().__init__()
         self.setWindowTitle("Recording and Graphing Application")
+        self.graph = None
 
         # Create a much larger font
         app_font = QFont()
         app_font.setPointSize(18)  # Substantially increased font size
-        #QApplication.setFont(app_font)
+        QApplication.setFont(app_font)
 
         # Create main tab widget
         self.tab_widget = QTabWidget()
@@ -110,10 +112,6 @@ class MainWindow(QMainWindow):
         # Adjust window size to fit contents
         self.adjustSize()
 
-        # Prepare graph
-        self.pyplot = pyplot
-        plotting.prepare_plot(self.pyplot)
-
     def on_start_recording(self):
         # Disable start button and enable pause button
         self.start_button.setEnabled(False)
@@ -134,14 +132,18 @@ class MainWindow(QMainWindow):
         if self.limit_by_time_checkbox.isChecked():
             time_constraints = (self.start_datetime.dateTime().toPyDateTime(), self.end_datetime.dateTime().toPyDateTime())
         else:
-            time_constraints = (datetime.min, datetime.max)
+            time_constraints = None
 
         readings = files.read_results(constants.RECORDING_DEFAULT_PATH, time_constraints, merge_methods)
 
+        queue = Queue()
+
         if merge_methods:
-            plotting.ungrouped_plot(self.pyplot, readings)
+            self.graph = MergedGraphWindow(readings, queue, time_constraints)
         else:
-            plotting.grouped_plot(self.pyplot, readings)
+            self.graph = UnmergedGraphWindow(readings, queue, time_constraints)
+
+        self.graph.show()
 
 
 def main():
