@@ -98,7 +98,7 @@ class BaseRecorder:
         # Repeat until the recorder is stopped
         while not self.stop_event.is_set():
             # Get new reading
-            reading = Reading(1, 2, datetime.now(), constants.RecordingMethod.BT_WEBSITE)
+            reading = Reading(1, 2, datetime.now(), constants.RecordingMethod.BSC)
 
             # Add new Reading object to queue
             BaseRecorder.add_reading_to_queue(reading)

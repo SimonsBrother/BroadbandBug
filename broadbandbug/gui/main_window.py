@@ -1,5 +1,7 @@
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
+from time import sleep
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
                              QVBoxLayout, QPushButton, QDateTimeEdit, QCheckBox,
@@ -7,16 +9,20 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
 from PyQt6.QtCore import QDateTime, Qt
 from PyQt6.QtGui import QFont
 
+import broadbandbug.library.classes as classes
 import broadbandbug.library.files as files
 import broadbandbug.library.constants as constants
 from broadbandbug.gui.graph_windows import MergedGraphWindow, UnmergedGraphWindow
+from broadbandbug.gui.recorder_selection import RecorderDialog
+from broadbandbug.recorders import speedtestcli, which_website
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Recording and Graphing Application")
-        self.graph = None
+        self.graph_dlg = self.recorder_dlg = self.recorder = None
+        self.threadpool_executor = ThreadPoolExecutor()
 
         # Create a much larger font
         app_font = QFont()
@@ -112,14 +118,43 @@ class MainWindow(QMainWindow):
         # Adjust window size to fit contents
         self.adjustSize()
 
+    # TODO test
     def on_start_recording(self):
+        # Show recording selection dialog
+        self.recorder_dlg = RecorderDialog()
+        self.recorder_dlg.show()
+
+        # TODO detect if cancel clicked
+        # If cancel clicked, return TODO
+
+        # Get data from dialog
+        method = constants.RecordingMethod(self.recorder_dlg.recording_combo.currentText())
+        browser = constants.Browser(self.recorder_dlg.browser_combo.currentText())
+
+        # Get required recorder
+        match method:
+            case constants.RecordingMethod.SPEEDTEST_CLI:
+                self.recorder = speedtestcli.SpeedtestCLIRecorder("")
+            case constants.RecordingMethod.WHICH_WEBSITE:
+                self.recorder = None # TODO implement Which?
+
+        # Start recorder
+        self.recorder.start_recording(self.threadpool_executor)
+
         # Disable start button and enable pause button
         self.start_button.setEnabled(False)
         self.pause_button.setEnabled(True)
 
+
     def on_pause_recording(self):
-        # Disable pause button and enable start button
         self.pause_button.setEnabled(False)
+
+        # Send stop signal
+        self.recorder.send_stop_signal()
+        # Wait for recorder to actually stop
+        while self.recorder.recorder_running:
+            sleep(.5)
+
         self.start_button.setEnabled(True)
 
     def update_times(self):
@@ -127,6 +162,7 @@ class MainWindow(QMainWindow):
         self.start_datetime.setEnabled(checked)
         self.end_datetime.setEnabled(checked)
 
+    # TODO test after the rest has been finished
     def show_graph(self):
         merge_methods = self.merge_method_checkbox.isChecked()
         if self.limit_by_time_checkbox.isChecked():
@@ -136,14 +172,14 @@ class MainWindow(QMainWindow):
 
         readings = files.read_results(constants.RECORDING_DEFAULT_PATH, time_constraints, merge_methods)
 
-        queue = Queue()
+        queue = classes.BaseRecorder.get_readings_queue()
 
         if merge_methods:
-            self.graph = MergedGraphWindow(readings, queue, time_constraints)
+            self.graph_dlg = MergedGraphWindow(readings, queue, time_constraints)
         else:
-            self.graph = UnmergedGraphWindow(readings, queue, time_constraints)
+            self.graph_dlg = UnmergedGraphWindow(readings, queue, time_constraints)
 
-        self.graph.show()
+        self.graph_dlg.show()
 
 
 def main():

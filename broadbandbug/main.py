@@ -7,10 +7,6 @@ import concurrent.futures as futures
 
 from library.files import results_writer
 
-# TODO fully implement GUI
-# TODO make and check recorders
-# TODO put everything together in main
-
 
 # TODO double check this, explain why its here
 def get_current_dir():
@@ -46,7 +42,7 @@ with futures.ThreadPoolExecutor(max_recorders + 1) as threadpool_exe:
 
     writer_future = threadpool_exe.submit(results_writer, results_path, results_queue, close_event)
 
-    # Prepare GUI TODO
+    # Prepare GUI
     # Run GUI - program will pause until its closed
 
     # Stop results writer

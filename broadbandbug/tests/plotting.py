@@ -24,7 +24,7 @@ def test_graph():
         while True:
             sleep(1)
             q.put(Reading(randint(0, 40), randint(0, 40), datetime.now(), RecordingMethod.SPEEDTEST_CLI))
-            q.put(Reading(randint(0, 40), randint(0, 40), datetime.now(), RecordingMethod.BT_WEBSITE))
+            q.put(Reading(randint(0, 40), randint(0, 40), datetime.now(), RecordingMethod.BSC))
 
     queue = Queue()
     thread = Thread(target=add_data, args=(queue,))
