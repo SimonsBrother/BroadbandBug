@@ -9,7 +9,6 @@ from PyQt6.QtGui import QFont
 
 import broadbandbug.library.files as files
 import broadbandbug.library.constants as constants
-import broadbandbug.library.plotting as plotting
 
 
 class MainWindow(QMainWindow):

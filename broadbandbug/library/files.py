@@ -75,8 +75,8 @@ def read_results(csv_path: Path | str, time_constraints: tuple[datetime, datetim
 def create_reading_from_row(row: dict) -> classes.Reading:
     """ Creates a Reading object from the dict provided - dict must have keys for 'upload', 'download', 'timestamp', and 'method'.
      For use with a method that gets Readings from a file. """
-    return classes.Reading(float(row["upload"]),
-                           float(row["download"]),
+    return classes.Reading(float(row["download"]),
+                           float(row["upload"]),
                            classes.Reading.convert_string_to_datetime(row["timestamp"]),
                            constants.RecordingMethod(row["method"]))
 

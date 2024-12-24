@@ -1,9 +1,10 @@
 from pathlib import Path
+from queue import Queue
 
-from matplotlib import pyplot as plt
+from PyQt6.QtWidgets import QApplication
 
-import broadbandbug.library.plotting as plotting
 import broadbandbug.library.files as files
+from broadbandbug.gui.graph_windows import MergedGraphWindow, UnmergedGraphWindow
 
 
 test_path = Path("./resources")
@@ -11,17 +12,17 @@ test_path = Path("./resources")
 
 # Manual test to make sure everything works
 def test_graph():
+    app = QApplication([])
+
     # Ungrouped plot
     ungrouped_results = files.read_results(test_path / "artificial.csv", None, False)
-    plotting.prepare_plot(plt, "Test ungrouped plot")
-    plotting.ungrouped_plot(plt, ungrouped_results)
-    plt.show()
+    MergedGraphWindow.run(app, ungrouped_results, Queue())
 
     # Grouped plot
     grouped_results = files.read_results(test_path / "artificial.csv", None, True)
-    plotting.prepare_plot(plt, "Test grouped plot")
-    plotting.grouped_plot(plt, grouped_results)
-    plt.show()
+    UnmergedGraphWindow.run(app, grouped_results, Queue())
+
+    # todo test limiting by time constraints
 
 if __name__ == "__main__":
     test_graph()

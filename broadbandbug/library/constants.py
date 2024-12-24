@@ -10,6 +10,13 @@ class RecordingMethod(Enum):
     WHICH_WEBSITE = "Which? Website"
 
 
+LINE_COLORS = {
+    RecordingMethod.SPEEDTEST_CLI: ["#0f3071", "#71500f"],
+    RecordingMethod.BT_WEBSITE: ["#000000", "#ff0000"],
+    RecordingMethod.WHICH_WEBSITE: ["#ce3a38", "#38ccce"],
+}
+
+
 class Browser(Enum):
     CHROME = "Chrome"
     EDGE = "Edge"
