@@ -18,7 +18,6 @@ LINE_COLORS = {
 
 
 class Browser(Enum):
-    CHROME = "Chrome"
     EDGE = "Edge"
 
 

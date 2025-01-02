@@ -52,6 +52,7 @@ def create_logger() -> logging.Logger:
 
 
 class BaseRecorder:
+    """ TODO document """
     _readings_queue = Queue()  # The Queue object used as a buffer for writing to the readings file.
     # Use thread-safe structure like queue, for interacting with other threads (like a GUI). Also supports multiple recorders.
     # Hidden via underscore because only the BaseRecorder readings attribute should be accessed (since modifying the superclass

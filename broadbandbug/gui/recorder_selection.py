@@ -1,11 +1,11 @@
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QHBoxLayout, QVBoxLayout, QComboBox, QLabel, QPushButton
+    QApplication, QHBoxLayout, QVBoxLayout, QComboBox, QLabel, QDialogButtonBox, QDialog
 )
 
 from broadbandbug.library import constants
 
 
-class RecorderDialog(QWidget):
+class RecorderDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Recording Method Selector")
@@ -38,18 +38,14 @@ class RecorderDialog(QWidget):
         self.browser_inline_layout.addWidget(self.browser_combo)
 
         # Buttons layout
-        self.buttons_layout = QHBoxLayout()
-        self.start_button = QPushButton("Start recording")
-        self.cancel_button = QPushButton("Cancel")
-        self.start_button.clicked.connect(self.start_recording)
-        self.cancel_button.clicked.connect(self.cancel)
-        self.buttons_layout.addWidget(self.start_button)
-        self.buttons_layout.addWidget(self.cancel_button)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
 
         # Add layouts to main layout
         self.main_layout.addLayout(self.inline_layout)
         self.main_layout.addLayout(self.browser_inline_layout)
-        self.main_layout.addLayout(self.buttons_layout)
+        self.main_layout.addWidget(self.button_box)
 
         # Adjust window size dynamically
         self.adjustSize()
@@ -61,11 +57,6 @@ class RecorderDialog(QWidget):
         self.browser_combo.setVisible(is_visible)
         self.adjustSize()
 
-    def start_recording(self):
-        self.close()
-
-    def cancel(self):
-        self.close()
 
 if __name__ == "__main__":
     app = QApplication([])

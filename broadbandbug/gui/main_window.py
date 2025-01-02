@@ -5,8 +5,8 @@ from time import sleep
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
                              QVBoxLayout, QPushButton, QDateTimeEdit, QCheckBox,
-                             QLabel, QFormLayout, QHBoxLayout)
-from PyQt6.QtCore import QDateTime, Qt
+                             QLabel, QFormLayout, QDialog, QMessageBox)
+from PyQt6.QtCore import QDateTime, Qt, QObject, pyqtSignal
 from PyQt6.QtGui import QFont
 
 import broadbandbug.library.classes as classes
@@ -15,6 +15,18 @@ import broadbandbug.library.constants as constants
 from broadbandbug.gui.graph_windows import MergedGraphWindow, UnmergedGraphWindow
 from broadbandbug.gui.recorder_selection import RecorderDialog
 from broadbandbug.recorders import speedtestcli, which_website
+
+
+class RecorderWrapper(QObject):
+    started = pyqtSignal()
+    stopped = pyqtSignal()
+
+    def __init__(self, recorder: classes.BaseRecorder):
+        super().__init__()
+        self.recorder = recorder
+
+    def run(self):
+        ...
 
 
 class MainWindow(QMainWindow):
@@ -42,23 +54,25 @@ class MainWindow(QMainWindow):
         button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Start Recording Button
-        self.start_button = QPushButton("Start recording")
+        self.start_button_default_text = "Start recording"
+        self.start_button = QPushButton(self.start_button_default_text)
         self.start_button.clicked.connect(self.on_start_recording)
 
         # Pause Recording Button
-        self.pause_button = QPushButton("Pause recording")
-        self.pause_button.setEnabled(False)
-        self.pause_button.clicked.connect(self.on_pause_recording)
+        self.stop_button_default_text = "Stop recording"
+        self.stop_button = QPushButton(self.stop_button_default_text)
+        self.stop_button.setEnabled(False)
+        self.stop_button.clicked.connect(self.on_stop_recording)
 
         # Make buttons the same width (use the wider of the two)
         button_width = max(self.start_button.sizeHint().width(),
-                           self.pause_button.sizeHint().width())
+                           self.stop_button.sizeHint().width())
         self.start_button.setFixedWidth(button_width)
-        self.pause_button.setFixedWidth(button_width)
+        self.stop_button.setFixedWidth(button_width)
 
         # Add buttons vertically and centered
         button_layout.addWidget(self.start_button)
-        button_layout.addWidget(self.pause_button)
+        button_layout.addWidget(self.stop_button)
 
         # Add centered button layout to main layout
         self.recording_layout.addLayout(button_layout)
@@ -121,11 +135,15 @@ class MainWindow(QMainWindow):
     # TODO test
     def on_start_recording(self):
         # Show recording selection dialog
-        self.recorder_dlg = RecorderDialog()
-        self.recorder_dlg.show()
+        if not self.recorder_dlg:
+            self.recorder_dlg = RecorderDialog()
+        response = self.recorder_dlg.exec()
 
-        # TODO detect if cancel clicked
-        # If cancel clicked, return TODO
+        # If cancel clicked, return
+        if response == QDialog.DialogCode.Rejected:
+            return
+
+        self.start_button.setText("Starting...")
 
         # Get data from dialog
         method = constants.RecordingMethod(self.recorder_dlg.recording_combo.currentText())
@@ -143,19 +161,21 @@ class MainWindow(QMainWindow):
 
         # Disable start button and enable pause button
         self.start_button.setEnabled(False)
-        self.pause_button.setEnabled(True)
+        self.stop_button.setEnabled(True)
+        self.start_button.setText("Started")
 
-
-    def on_pause_recording(self):
-        self.pause_button.setEnabled(False)
+    # TODO test
+    def on_stop_recording(self):
+        self.stop_button.setEnabled(False)
 
         # Send stop signal
         self.recorder.send_stop_signal()
-        # Wait for recorder to actually stop
+        # Wait for recorder to actually stop before re-enabling the start button
         while self.recorder.recorder_running:
             sleep(.5)
 
         self.start_button.setEnabled(True)
+        self.stop_button.setText(self.stop_button_default_text)
 
     def update_times(self):
         checked = self.limit_by_time_checkbox.isChecked()
@@ -180,6 +200,8 @@ class MainWindow(QMainWindow):
             self.graph_dlg = UnmergedGraphWindow(readings, queue, time_constraints)
 
         self.graph_dlg.show()
+
+    # TODO stop once window is closed
 
 
 def main():
