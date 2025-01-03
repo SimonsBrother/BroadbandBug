@@ -1,16 +1,15 @@
-""" TODO document """
+""" Contains most functions related to file handling, including creation, reading, and filtering. """
 import csv
 from datetime import datetime
 from pathlib import Path
-from queue import Queue
-from threading import Event
 
 from . import classes
 from . import constants
 
 
 def ensure_file_exists(path: Path | str, is_dir: bool):
-    """ Ensure the file at the path provided exists, creating it if it does not. Returns True if it already existed, False if it had to be created. """
+    """ Ensure the file at the path provided exists, creating it if it does not.
+    Returns True if it already existed, False if it had to be created. """
     # Convert from string to path if necessary
     if isinstance(path, str):
         path = Path(path)
@@ -118,34 +117,3 @@ def sort_by_timestamp(readings: dict | list):
         # Sort within each method
         for method in readings.keys():
             readings[method].sort(key=sort)
-
-
-# TODO: bug where the graph takes all the new readings; make adding to file part of BaseRecorder's recording_loop
-def results_writer(csv_path: Path | str, queue: Queue, close_event: Event):
-    """
-    Opens the csv file specified by csv_path, and writes any new records to it from the queue.
-    This should be run in a separate thread.
-    May raise any errors from open() statement. Adapted from various articles from SuperFastPython.com
-    :param csv_path: path to the csv file to write results to.
-    :param queue: a Queue object that stores Record objects.
-    :param close_event: an Event object that indicates when to end - will continue running until queue is empty
-    """
-    # Open CSV file and initialise writer
-    with open(csv_path, "a") as csv_file:
-        writer = csv.DictWriter(csv_file, classes.Reading.attributes)
-        writer.writeheader()
-
-        # Keep checking if there are results to be stored in the queue to ensure everything added to queue is written,
-        # or if the event signifying the end of the program is not triggered
-        while queue.qsize() > 0 or not close_event.is_set():
-            # Ensure queue is not empty before attempting to get from queue
-            if queue.qsize() > 0:
-                # Get next result
-                result_obj = queue.get()
-                result_obj: classes.Reading
-                # Write next result to csv file
-                writer.writerow(result_obj.format_for_csv())
-                # Flush buffer to ensure there is no data to be written
-                csv_file.flush()
-                # Mark task as done since write is now complete
-                queue.task_done()

@@ -52,7 +52,7 @@ class BaseGraphWindow(QWidget):
 
     def closeEvent(self, event):
         self.timer.stop()
-        BaseRecorder.stop_new_readings_queue()
+        BaseRecorder.delete_new_readings_queue()
 
     @classmethod
     def run(cls, app, *args):

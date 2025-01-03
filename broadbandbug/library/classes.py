@@ -1,17 +1,18 @@
-""" Defines most of the classes used throughout BroadbandBug. """
+""" Defines most of the classes used throughout BroadbandBug: Reading, BaseRecorder. See individual documentation. """
 from dataclasses import dataclass
 from threading import Event
 from queue import Queue
 from datetime import datetime
 import logging
 from typing import ClassVar
+import csv
 
 from . import constants
 
 
 @dataclass
 class Reading:
-    """ Stores the upload and download broadband speed
+    """ Represents a single reading of the broadband speed at some point in time.
     :var download: float, the download speed (no specific unit)
     :var upload: float, the upload speed (no specific unit)
     :var timestamp: datetime, when the reading was obtained.
@@ -52,33 +53,35 @@ def create_logger() -> logging.Logger:
 
 
 class BaseRecorder:
-    """ TODO document """
+    """ A base class defining how recorders will run, that is meant to be extended.
+    The methods 'prepare', 'process', and 'cleanup' are meant to be overridden.
+    The recording_loop is meant to be passed to a thread
+    """
     _new_readings_queue: Queue | None = None  # Used to store new readings, which can be used to update graphs. Use
     # thread-safe structure like queue, for interacting with other threads (like a GUI).
     _logger = create_logger()
+    csv_path = constants.RECORDING_DEFAULT_PATH
 
     def __init__(self, identifier: str = "recorder"):
-        """ A base class defining how recorders will run, that is meant to be extended - specifically, recording_loop should be overridden.
+        """ A base class defining how recorders will run, that is meant to be extended.
         :param identifier: a string identifying the recorder.
         """
         self.identifier = identifier
         self._recorder_running = False
 
         self.stop_event = Event()  # This can be set to indicate when the recorder should be stopped.
-        self.future = None  # This represents the asynchronous execution of the recording_loop function
         BaseRecorder.get_logger().info(f"Created {identifier}")
 
-    # Getters and setters for queue
+    # New readings queue related functions
     @staticmethod
     def get_new_readings_queue() -> Queue:
         """ Gets the readings queue. """
         return BaseRecorder._new_readings_queue
 
-    @staticmethod  # Define as static method because regardless of which class it is from, it should only affect BaseRecorder.
+    @staticmethod  # Static method because regardless of which class it is from, it should only affect BaseRecorder.
     def add_reading_to_queue(reading: Reading):
         """ Adds a reading to the queue. """
-        if BaseRecorder._new_readings_queue is not None:
-            BaseRecorder._new_readings_queue.put(reading)
+        BaseRecorder._new_readings_queue.put(reading)
 
     @staticmethod
     def initialise_new_readings_queue():
@@ -86,9 +89,11 @@ class BaseRecorder:
         BaseRecorder._new_readings_queue = Queue()
 
     @staticmethod
-    def stop_new_readings_queue():
-        """ Indicates that the queue is not needed; called once the graph are closed """
+    def delete_new_readings_queue():
+        """ Indicates that the queue is not needed; likely to be called once a graph is closed. """
+        # This implicitly deletes the queue, saving memory
         BaseRecorder._new_readings_queue = None
+    # End of new readings queue related functions
 
     # Get logger
     @staticmethod  # Use this to get the logger, so that only one is used throughout child classes.
@@ -96,25 +101,36 @@ class BaseRecorder:
         """ Returns the BaseRecorder logger. """
         return BaseRecorder._logger
 
-    # Get whether the recorder is running
-    @property
-    def recorder_running(self) -> bool:
-        return self._recorder_running
-
     def recording_loop(self):
-        """ Repeatedly takes a reading and adds it to the queue. """
-        self.prepare()
-        self.set_recorder_running()
-        # Repeat until the recorder is stopped
-        while not self.stop_event.is_set():
-            reading = self.process()
+        """ Opens the CSV file, repeatedly takes a reading, adds it to the new readings queue and CSV file.
+        May raise any errors from open() statement. """
+        # Open CSV file and initialise writer
+        with open(BaseRecorder.csv_path, "a+") as csv_file:
+            writer = csv.DictWriter(csv_file, Reading.attributes)
 
-            # Add new Reading object to queue
-            BaseRecorder.add_reading_to_queue(reading)
+            # Create header if it does not yet exist
+            if csv_file.readline() != "":
+                writer.writeheader()
+            csv_file.seek(0)
+
+            self.prepare()
+            self.indicate_recorder_started()
+            # Repeat until the recorder is stopped
+            while not self.stop_event.is_set():
+                reading = self.process()
+
+                # Attempt to add new Reading object to queue
+                if BaseRecorder._new_readings_queue is not None:
+                    BaseRecorder.add_reading_to_queue(reading)
+
+                # Record to file
+                writer.writerow(reading.format_for_csv())
+                csv_file.flush()  # Flush buffer to ensure there is no data to be written
 
         self.cleanup()
-        self.set_recorder_stopped()
+        self.indicate_recorder_stopped()
 
+    # Functions to override
     def prepare(self):
         """ Function called before the recording loop starts. For overriding. """
         pass
@@ -127,9 +143,11 @@ class BaseRecorder:
     def cleanup(self):
         """ Function called after the recording loop ends. For overriding. """
         pass
+    # End of functions to override
 
-    def set_recorder_running(self):
-        """ Indicates that the recorder has started. """
+    # Recorder running state functions
+    def indicate_recorder_started(self):
+        """ Indicates that the recorder has started. For use within the recording_loop, shouldn't be used elsewhere. """
         BaseRecorder.get_logger().info(f"Recorder '{self.identifier}' has started.")
         self._recorder_running = True
 
@@ -138,11 +156,16 @@ class BaseRecorder:
         BaseRecorder.get_logger().info(f"Stopping '{self.identifier}'...")
         self.stop_event.set()
 
-    def set_recorder_stopped(self):
-        """ Indicates that the recorder has stopped. """
+    def indicate_recorder_stopped(self):
+        """ Indicates that the recorder has stopped. For use within the recording_loop, shouldn't be used elsewhere. """
         # Log that the recorder has stopped.
         BaseRecorder.get_logger().info(f"Recorder '{self.identifier}' has stopped.")
         self._recorder_running = False
+
+    @property
+    def recorder_running(self) -> bool:
+        return self._recorder_running
+    # End of recorder running state functions
 
     def __repr__(self):
         return f"{type(self).__name__}: {self.identifier!r} ({'stopped' if self.recorder_running else 'active'})"

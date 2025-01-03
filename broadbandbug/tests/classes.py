@@ -57,7 +57,7 @@ def test_base_recorder():
     # Test recording
     assert classes.BaseRecorder.get_results_queue().qsize() == 0
     with futures.ThreadPoolExecutor(2) as exe:
-        base_rec.set_recorder_running(exe)
+        base_rec.indicate_recorder_started(exe)
         sleep(0.2)
         base_rec.send_stop_signal()
 
