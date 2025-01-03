@@ -105,10 +105,10 @@ class MergedGraphWindow(BaseGraphWindow):
         )
 
     def update_plot(self):
-        updated = False
-        queue = BaseRecorder.get_new_readings_queue()
-        while not queue.empty():
-            reading = queue.get()
+        updated = False  # Determines if it is necessary to redraw lines (which happens if there is a new reading)
+        new_readings_queue = BaseRecorder.get_new_readings_queue()
+        while not new_readings_queue.empty():
+            reading = new_readings_queue.get()
             if not self.is_reading_within_time_constraints(reading):  # Skip if reading out of time constraints
                 continue
             self.download_speeds.append(reading.download)
@@ -143,7 +143,6 @@ class UnmergedGraphWindow(BaseGraphWindow):
 
             self.initialise_graphs(recording_method)
 
-
     def initialise_graphs(self, recording_method: RecordingMethod):
         recording_method_data = self.lines[recording_method]
         color_scheme = constants.LINE_COLORS[recording_method]
@@ -169,19 +168,19 @@ class UnmergedGraphWindow(BaseGraphWindow):
         )
 
     def update_plot(self):
-        updated = []  # TODO document
-        queue = BaseRecorder.get_new_readings_queue()  # TODO rename
-        while not queue.empty():
-            reading = queue.get()
+        methods_with_new_readings = []
+        new_readings_queue = BaseRecorder.get_new_readings_queue()
+        while not new_readings_queue.empty():
+            reading = new_readings_queue.get()
             if not self.is_reading_within_time_constraints(reading):  # Skip if reading out of time constraints
                 continue
             line = self.lines[reading.method]
             line["down_data"].append(reading.download)
             line["up_data"].append(reading.upload)
             line["timestamps"].append(reading.timestamp.timestamp())
-            updated.append(reading.method)
+            methods_with_new_readings.append(reading.method)
 
-        for method in updated:
+        for method in methods_with_new_readings:
             line = self.lines[method]
             if line["down_line"] is None:
                 self.initialise_graphs(method)

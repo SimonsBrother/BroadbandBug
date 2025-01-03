@@ -9,6 +9,7 @@ from PyQt6.QtGui import QFont
 import broadbandbug.library.classes as classes
 import broadbandbug.library.files as files
 import broadbandbug.library.constants as constants
+from broadbandbug.gui.closing_window import ClosingDialog
 from broadbandbug.gui.graph_windows import MergedGraphWindow, UnmergedGraphWindow
 from broadbandbug.gui.recorder_selection import RecorderDialog
 from broadbandbug.recorders import speedtestcli, which_website
@@ -18,7 +19,6 @@ class RecorderWorker(QObject):
     started = pyqtSignal()
     stopped = pyqtSignal()
 
-    # TODO validation
     def __init__(self, recorder_type: type[classes.BaseRecorder], **kwargs):
         super().__init__()
         self.recorder_type = recorder_type
@@ -34,9 +34,7 @@ class RecorderWorker(QObject):
     def send_stop_signal(self):
         if self.recorder is not None:
             self.recorder.send_stop_signal()
-        else:
-            # This should never happen; the UI should prevent the user from stopping before it starts
-            raise Exception("No recorder is running.")
+        # It is possible for recorder to be None if the user closes the window immediately after starting a recorder
 
 
 class MainWindow(QMainWindow):
@@ -141,7 +139,6 @@ class MainWindow(QMainWindow):
         # Adjust window size to fit contents
         self.adjustSize()
 
-    # TODO test
     def on_start_recording_pressed(self):
         # Show recording selection dialog
         if not self.recorder_dlg:
@@ -185,7 +182,6 @@ class MainWindow(QMainWindow):
         self.stop_button.setEnabled(True)
         self.start_button.setText("Started")
 
-    # TODO test
     def on_stop_recording_pressed(self):
         self.stop_button.setEnabled(False)
         self.stop_button.setText("Stopping...")
@@ -202,7 +198,6 @@ class MainWindow(QMainWindow):
         self.start_datetime.setEnabled(checked)
         self.end_datetime.setEnabled(checked)
 
-    # TODO test after the rest has been finished
     def show_graph(self):
         merge_methods = self.merge_method_checkbox.isChecked()
         if self.limit_by_time_checkbox.isChecked():
@@ -219,7 +214,21 @@ class MainWindow(QMainWindow):
 
         self.graph_dlg.show()
 
-    # TODO stop once window is closed with closeEvent
+    def closeEvent(self, event):
+        """ Ensures everything is closed as intended, particularly the recorder and its thread. """
+        if self.recorder_worker.recorder.recorder_running:
+            self.on_stop_recording_pressed() # Re-use
+            self.setDisabled(True)
+            ClosingDialog(self).exec()
+
+            # Attempt to quit thread (this has to be done or else it waits forever)
+            try:
+                self.thread.quit()
+            except RuntimeError:
+                pass
+            self.thread.wait()
+
+        event.accept()
 
 
 def main():

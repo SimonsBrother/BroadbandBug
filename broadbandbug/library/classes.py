@@ -119,6 +119,10 @@ class BaseRecorder:
             while not self.stop_event.is_set():
                 reading = self.process()
 
+                if reading is None:  # I'm unsure how this happens, but it can; probably related to threading
+                    BaseRecorder.get_logger().warning("Reading returned None")
+                    continue
+
                 # Attempt to add new Reading object to queue
                 if BaseRecorder._new_readings_queue is not None:
                     BaseRecorder.add_reading_to_queue(reading)
