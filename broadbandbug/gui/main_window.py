@@ -1,12 +1,9 @@
 import sys
-from concurrent.futures import ThreadPoolExecutor
-from queue import Queue
-from time import sleep
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
                              QVBoxLayout, QPushButton, QDateTimeEdit, QCheckBox,
                              QLabel, QFormLayout, QDialog, QMessageBox)
-from PyQt6.QtCore import QDateTime, Qt, QObject, pyqtSignal
+from PyQt6.QtCore import QDateTime, Qt, QObject, pyqtSignal, QThread
 from PyQt6.QtGui import QFont
 
 import broadbandbug.library.classes as classes
@@ -17,24 +14,36 @@ from broadbandbug.gui.recorder_selection import RecorderDialog
 from broadbandbug.recorders import speedtestcli, which_website
 
 
-class RecorderWrapper(QObject):
+class RecorderWorker(QObject):
     started = pyqtSignal()
     stopped = pyqtSignal()
 
-    def __init__(self, recorder: classes.BaseRecorder):
+    # TODO validation
+    def __init__(self, recorder_type: type[classes.BaseRecorder], **kwargs):
         super().__init__()
-        self.recorder = recorder
+        self.recorder_type = recorder_type
+        self.kwargs = kwargs
+        self.recorder = None
 
     def run(self):
-        ...
+        self.recorder = self.recorder_type(**self.kwargs)
+        self.started.emit()
+        self.recorder.recording_loop()
+        self.stopped.emit()
+
+    def send_stop_signal(self):
+        if self.recorder is not None:
+            self.recorder.send_stop_signal()
+        else:
+            # This should never happen; the UI should prevent the user from stopping before it starts
+            raise Exception("No recorder is running.")
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Recording and Graphing Application")
-        self.graph_dlg = self.recorder_dlg = self.recorder = None
-        self.threadpool_executor = ThreadPoolExecutor()
+        self.graph_dlg = self.recorder_dlg = self.recorder_worker = self.thread = None
 
         # Create a much larger font
         app_font = QFont()
@@ -56,13 +65,13 @@ class MainWindow(QMainWindow):
         # Start Recording Button
         self.start_button_default_text = "Start recording"
         self.start_button = QPushButton(self.start_button_default_text)
-        self.start_button.clicked.connect(self.on_start_recording)
+        self.start_button.clicked.connect(self.on_start_recording_pressed)
 
         # Pause Recording Button
         self.stop_button_default_text = "Stop recording"
         self.stop_button = QPushButton(self.stop_button_default_text)
         self.stop_button.setEnabled(False)
-        self.stop_button.clicked.connect(self.on_stop_recording)
+        self.stop_button.clicked.connect(self.on_stop_recording_pressed)
 
         # Make buttons the same width (use the wider of the two)
         button_width = max(self.start_button.sizeHint().width(),
@@ -133,7 +142,7 @@ class MainWindow(QMainWindow):
         self.adjustSize()
 
     # TODO test
-    def on_start_recording(self):
+    def on_start_recording_pressed(self):
         # Show recording selection dialog
         if not self.recorder_dlg:
             self.recorder_dlg = RecorderDialog()
@@ -143,38 +152,49 @@ class MainWindow(QMainWindow):
         if response == QDialog.DialogCode.Rejected:
             return
 
+        self.start_button.setEnabled(False)
         self.start_button.setText("Starting...")
 
         # Get data from dialog
         method = constants.RecordingMethod(self.recorder_dlg.recording_combo.currentText())
         browser = constants.Browser(self.recorder_dlg.browser_combo.currentText())
 
-        # Get required recorder
+        # Get required recorder with match case
         match method:
             case constants.RecordingMethod.SPEEDTEST_CLI:
-                self.recorder = speedtestcli.SpeedtestCLIRecorder("")
-            case constants.RecordingMethod.WHICH_WEBSITE:
-                self.recorder = None # TODO implement Which?
+                recorder = speedtestcli.SpeedtestCLIRecorder
+            case _:
+                recorder = None
 
-        # Start recorder
-        self.recorder.start_recording(self.threadpool_executor)
+        # Make the wrapper and pass it to a new thread
+        self.thread = QThread()
+        self.recorder_worker = RecorderWorker(recorder)
+        self.recorder_worker.moveToThread(self.thread)
 
+        self.thread.started.connect(self.recorder_worker.run)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.recorder_worker.started.connect(self.on_recorder_started)
+        self.recorder_worker.stopped.connect(self.on_recorder_stopped)
+        self.recorder_worker.stopped.connect(self.thread.quit)
+        self.recorder_worker.stopped.connect(self.recorder_worker.deleteLater)
+
+        self.thread.start()
+
+    def on_recorder_started(self):
         # Disable start button and enable pause button
-        self.start_button.setEnabled(False)
         self.stop_button.setEnabled(True)
         self.start_button.setText("Started")
 
     # TODO test
-    def on_stop_recording(self):
+    def on_stop_recording_pressed(self):
         self.stop_button.setEnabled(False)
-
+        self.stop_button.setText("Stopping...")
         # Send stop signal
-        self.recorder.send_stop_signal()
-        # Wait for recorder to actually stop before re-enabling the start button
-        while self.recorder.recorder_running:
-            sleep(.5)
+        self.recorder_worker.send_stop_signal()
 
+    def on_recorder_stopped(self):
         self.start_button.setEnabled(True)
+        self.start_button.setText(self.start_button_default_text)
         self.stop_button.setText(self.stop_button_default_text)
 
     def update_times(self):
@@ -192,16 +212,14 @@ class MainWindow(QMainWindow):
 
         readings = files.read_results(constants.RECORDING_DEFAULT_PATH, time_constraints, merge_methods)
 
-        queue = classes.BaseRecorder.get_readings_queue()
-
         if merge_methods:
-            self.graph_dlg = MergedGraphWindow(readings, queue, time_constraints)
+            self.graph_dlg = MergedGraphWindow(readings, time_constraints)
         else:
-            self.graph_dlg = UnmergedGraphWindow(readings, queue, time_constraints)
+            self.graph_dlg = UnmergedGraphWindow(readings, time_constraints)
 
         self.graph_dlg.show()
 
-    # TODO stop once window is closed
+    # TODO stop once window is closed with closeEvent
 
 
 def main():

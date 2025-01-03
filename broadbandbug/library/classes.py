@@ -53,13 +53,11 @@ def create_logger() -> logging.Logger:
 
 class BaseRecorder:
     """ TODO document """
-    _readings_queue = Queue()  # The Queue object used as a buffer for writing to the readings file.
-    # Use thread-safe structure like queue, for interacting with other threads (like a GUI). Also supports multiple recorders.
-    # Hidden via underscore because only the BaseRecorder readings attribute should be accessed (since modifying the superclass
-    # attribute will modify the child class static attributes, but modifying the child attributes will not affect the parent.
+    _new_readings_queue: Queue | None = None  # Used to store new readings, which can be used to update graphs. Use
+    # thread-safe structure like queue, for interacting with other threads (like a GUI).
     _logger = create_logger()
 
-    def __init__(self, identifier: str):
+    def __init__(self, identifier: str = "recorder"):
         """ A base class defining how recorders will run, that is meant to be extended - specifically, recording_loop should be overridden.
         :param identifier: a string identifying the recorder.
         """
@@ -72,14 +70,25 @@ class BaseRecorder:
 
     # Getters and setters for queue
     @staticmethod
-    def get_readings_queue() -> Queue:
+    def get_new_readings_queue() -> Queue:
         """ Gets the readings queue. """
-        return BaseRecorder._readings_queue
+        return BaseRecorder._new_readings_queue
 
     @staticmethod  # Define as static method because regardless of which class it is from, it should only affect BaseRecorder.
     def add_reading_to_queue(reading: Reading):
         """ Adds a reading to the queue. """
-        BaseRecorder._readings_queue.put(reading)
+        if BaseRecorder._new_readings_queue is not None:
+            BaseRecorder._new_readings_queue.put(reading)
+
+    @staticmethod
+    def initialise_new_readings_queue():
+        """ Initialises the queue for storing new readings; this is likely to be called before a graph is opened. """
+        BaseRecorder._new_readings_queue = Queue()
+
+    @staticmethod
+    def stop_new_readings_queue():
+        """ Indicates that the queue is not needed; called once the graph are closed """
+        BaseRecorder._new_readings_queue = None
 
     # Get logger
     @staticmethod  # Use this to get the logger, so that only one is used throughout child classes.
@@ -92,24 +101,35 @@ class BaseRecorder:
     def recorder_running(self) -> bool:
         return self._recorder_running
 
-    # This function is to overridden and passed on to the thread executor. It is here as a demonstration only.
     def recording_loop(self):
         """ Repeatedly takes a reading and adds it to the queue. """
-        BaseRecorder.get_logger().warning("USING BASE CLASS, WHICH IS FOR TESTING PURPOSES ONLY")
+        self.prepare()
+        self.set_recorder_running()
         # Repeat until the recorder is stopped
         while not self.stop_event.is_set():
-            # Get new reading
-            reading = Reading(1, 2, datetime.now(), constants.RecordingMethod.BSC)
+            reading = self.process()
 
             # Add new Reading object to queue
             BaseRecorder.add_reading_to_queue(reading)
 
-        self.confirm_stopped()
+        self.cleanup()
+        self.set_recorder_stopped()
 
-    def start_recording(self, threadpool_executor):
-        """ Starts the recorder by submitting the recording function to the threadpool executor passed. """
-        # Submit the new BaseRecorder object's recording_loop function to executor, and set the BaseRecorder's future
-        self.future = threadpool_executor.submit(self.recording_loop)
+    def prepare(self):
+        """ Function called before the recording loop starts. For overriding. """
+        pass
+
+    def process(self) -> Reading:
+        """ This function is to be overridden. It is here for demonstration purposes only. """
+        BaseRecorder.get_logger().warning("USING BASE CLASS, WHICH IS FOR TESTING PURPOSES ONLY")
+        return Reading(1, 2, datetime.now(), constants.RecordingMethod.BSC)
+
+    def cleanup(self):
+        """ Function called after the recording loop ends. For overriding. """
+        pass
+
+    def set_recorder_running(self):
+        """ Indicates that the recorder has started. """
         BaseRecorder.get_logger().info(f"Recorder '{self.identifier}' has started.")
         self._recorder_running = True
 
@@ -118,8 +138,8 @@ class BaseRecorder:
         BaseRecorder.get_logger().info(f"Stopping '{self.identifier}'...")
         self.stop_event.set()
 
-    def confirm_stopped(self):
-        """ Logs that the recorder has stopped and changes the recorder's running status to False. """
+    def set_recorder_stopped(self):
+        """ Indicates that the recorder has stopped. """
         # Log that the recorder has stopped.
         BaseRecorder.get_logger().info(f"Recorder '{self.identifier}' has stopped.")
         self._recorder_running = False

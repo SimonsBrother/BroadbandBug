@@ -1,5 +1,4 @@
 from datetime import datetime
-from queue import Queue
 
 from PyQt6 import QtCore
 import pyqtgraph as pg
@@ -7,14 +6,15 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 from broadbandbug.library import constants
 from broadbandbug.library.classes import Reading
+from broadbandbug.library.classes import BaseRecorder
 from broadbandbug.library.constants import RecordingMethod
 
 
 # TODO bug: plotting graphs does not consider the time the reading was taken; as such, solstice/equinox times may be an hour inaccurate
-class GraphWindow(QWidget):
+class BaseGraphWindow(QWidget):
     REFRESH_INTERVAL_MS = 1000 * 10
 
-    def __init__(self, new_readings: Queue[Reading], time_constraints: tuple[datetime] | None):
+    def __init__(self, time_constraints: tuple[datetime] | None):
         super().__init__()
         layout = QVBoxLayout()
         self.graph = pg.PlotWidget()
@@ -40,15 +40,19 @@ class GraphWindow(QWidget):
 
         # Timer to update new readings
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(GraphWindow.REFRESH_INTERVAL_MS)
+        self.timer.setInterval(BaseGraphWindow.REFRESH_INTERVAL_MS)
         self.timer.timeout.connect(self.update_plot)
         self.timer.start()
 
-        # Queue of new readings
-        self.new_readings = new_readings
+        # Initialise BaseRecorder queue
+        BaseRecorder.initialise_new_readings_queue()
 
     def update_plot(self):
         print("WARNING: Using abstract base class - use a subclass instead")
+
+    def closeEvent(self, event):
+        self.timer.stop()
+        BaseRecorder.stop_new_readings_queue()
 
     @classmethod
     def run(cls, app, *args):
@@ -63,9 +67,9 @@ class GraphWindow(QWidget):
                 or self.time_constraints[0] <= reading.timestamp <= self.time_constraints[1])
 
 
-class MergedGraphWindow(GraphWindow):
-    def __init__(self, readings: list[Reading], new_readings: Queue, time_constraints: tuple[datetime] | None):
-        super().__init__(new_readings, time_constraints)
+class MergedGraphWindow(BaseGraphWindow):
+    def __init__(self, readings: list[Reading], time_constraints: tuple[datetime] | None):
+        super().__init__(time_constraints)
         self.setWindowTitle("Merged Graph")
 
         # Initialise lists to store all the data
@@ -102,8 +106,9 @@ class MergedGraphWindow(GraphWindow):
 
     def update_plot(self):
         updated = False
-        while not self.new_readings.empty():
-            reading = self.new_readings.get()
+        queue = BaseRecorder.get_new_readings_queue()
+        while not queue.empty():
+            reading = queue.get()
             if not self.is_reading_within_time_constraints(reading):  # Skip if reading out of time constraints
                 continue
             self.download_speeds.append(reading.download)
@@ -116,9 +121,9 @@ class MergedGraphWindow(GraphWindow):
             self.upload_line.setData(self.timestamps, self.upload_speeds)
 
 
-class UnmergedGraphWindow(GraphWindow):
-    def __init__(self, readings: dict, new_readings: Queue, time_constraints: tuple[datetime] | None):
-        super().__init__(new_readings, time_constraints)
+class UnmergedGraphWindow(BaseGraphWindow):
+    def __init__(self, readings: dict, time_constraints: tuple[datetime] | None):
+        super().__init__(time_constraints)
         self.setWindowTitle("Unmerged Graph")
 
         # This structure stores
@@ -164,9 +169,10 @@ class UnmergedGraphWindow(GraphWindow):
         )
 
     def update_plot(self):
-        updated = []
-        while not self.new_readings.empty():
-            reading = self.new_readings.get()
+        updated = []  # TODO document
+        queue = BaseRecorder.get_new_readings_queue()  # TODO rename
+        while not queue.empty():
+            reading = queue.get()
             if not self.is_reading_within_time_constraints(reading):  # Skip if reading out of time constraints
                 continue
             line = self.lines[reading.method]

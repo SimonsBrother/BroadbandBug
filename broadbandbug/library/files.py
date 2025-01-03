@@ -52,13 +52,13 @@ def read_results(csv_path: Path | str, time_constraints: tuple[datetime, datetim
         if merge_methods:
             for row in reader:
                 reading = create_reading_from_row(row)
-                if include_reading(reading, time_constraints):
+                if check_reading_in_constraints(reading, time_constraints):
                     readings.append(reading)
 
         else:
             for row in reader:
                 reading = create_reading_from_row(row)
-                if include_reading(reading, time_constraints):
+                if check_reading_in_constraints(reading, time_constraints):
                     readings[reading.method].append(reading)
             prune_unused_groups(readings)
 
@@ -79,7 +79,7 @@ def create_reading_from_row(row: dict) -> classes.Reading:
 
 
 # Used by include_reading, implicitly tested by it
-def include_reading(reading: classes.Reading, time_constraints: tuple[datetime, datetime] | None):
+def check_reading_in_constraints(reading: classes.Reading, time_constraints: tuple[datetime, datetime] | None):
     """ Checks if the reading passed to this function should be included in a graph, given certain constraints.
     :param reading: the reading to evaluate.
     :param time_constraints: two datetime objects that the constraint timestamp should be within or equal to - alternatively, None indicates no constraints.
@@ -120,9 +120,11 @@ def sort_by_timestamp(readings: dict | list):
             readings[method].sort(key=sort)
 
 
+# TODO: bug where the graph takes all the new readings; make adding to file part of BaseRecorder's recording_loop
 def results_writer(csv_path: Path | str, queue: Queue, close_event: Event):
     """
     Opens the csv file specified by csv_path, and writes any new records to it from the queue.
+    This should be run in a separate thread.
     May raise any errors from open() statement. Adapted from various articles from SuperFastPython.com
     :param csv_path: path to the csv file to write results to.
     :param queue: a Queue object that stores Record objects.

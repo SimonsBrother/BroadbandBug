@@ -75,7 +75,7 @@ def test_results_writer():
         writer_future: Future  # Helping out PyCharm
 
         # Start recording
-        base_rec.start_recording(threadpool_exe)
+        base_rec.set_recorder_running(threadpool_exe)
         sleep(0.01)
 
         # Stop everything
