@@ -1,5 +1,3 @@
-import sys
-
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
                              QVBoxLayout, QPushButton, QDateTimeEdit, QCheckBox,
                              QLabel, QFormLayout, QDialog, QMessageBox)
@@ -18,6 +16,7 @@ from broadbandbug.recorders import speedtestcli, which_website
 class RecorderWorker(QObject):
     started = pyqtSignal()
     stopped = pyqtSignal()
+    error = pyqtSignal(str)
 
     def __init__(self, recorder_type: type[classes.BaseRecorder], **kwargs):
         super().__init__()
@@ -28,7 +27,17 @@ class RecorderWorker(QObject):
     def run(self):
         self.recorder = self.recorder_type(**self.kwargs)
         self.started.emit()
-        self.recorder.recording_loop()
+        try:
+            self.recorder.recording_loop()
+        except FileNotFoundError:
+            # The file should automatically be created when the application starts.
+            # This should never happen unless the user deletes the file after the application starts.
+            self.error.emit("No output file: No recording file was found, please restart the application.")
+        except PermissionError:
+            self.error.emit("Permission denied: Permission denied, please ensure you have full access to the recording file, or run the application as an administrator.")
+        except Exception as e:
+            self.error.emit(f"Unexpected error: "
+                            f"An unknown error occurred, please restart the application.\n\nDetails:\n{e}")
         self.stopped.emit()
 
     def send_stop_signal(self):
@@ -174,6 +183,7 @@ class MainWindow(QMainWindow):
         self.recorder_worker.stopped.connect(self.on_recorder_stopped)
         self.recorder_worker.stopped.connect(self.thread.quit)
         self.recorder_worker.stopped.connect(self.recorder_worker.deleteLater)
+        self.recorder_worker.error.connect(self.on_error_received)
 
         self.thread.start()
 
@@ -199,6 +209,7 @@ class MainWindow(QMainWindow):
         self.end_datetime.setEnabled(checked)
 
     def show_graph(self):
+        # TODO error handling
         merge_methods = self.merge_method_checkbox.isChecked()
         if self.limit_by_time_checkbox.isChecked():
             time_constraints = (self.start_datetime.dateTime().toPyDateTime(), self.end_datetime.dateTime().toPyDateTime())
@@ -216,12 +227,12 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """ Ensures everything is closed as intended, particularly the recorder and its thread. """
-        if self.recorder_worker.recorder.recorder_running:
+        if self.recorder_worker and self.recorder_worker.recorder.recorder_running:
             self.on_stop_recording_pressed() # Re-use
             self.setDisabled(True)
             ClosingDialog(self).exec()
 
-            # Attempt to quit thread (this has to be done or else it waits forever)
+            # Attempt to quit thread (this has to be done or else it waits forever), may fail if it was already deleted.
             try:
                 self.thread.quit()
             except RuntimeError:
@@ -230,12 +241,15 @@ class MainWindow(QMainWindow):
 
         event.accept()
 
+    def on_error_received(self, msg: str):
+        QMessageBox.critical(self, *msg.split(": "))
+
 
 def main():
-    app = QApplication(sys.argv)
+    app = QApplication([])
     window = MainWindow()
     window.show()
-    sys.exit(app.exec())
+    app.exec()
 
 
 if __name__ == "__main__":

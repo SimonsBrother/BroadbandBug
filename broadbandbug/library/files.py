@@ -15,6 +15,8 @@ def ensure_file_exists(path: Path | str, is_dir: bool):
         path = Path(path)
 
     exists = path.exists()
+    print(path)
+    print(exists)
 
     # Create file or directory is it doesn't exist
     if not exists:

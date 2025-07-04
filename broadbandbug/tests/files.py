@@ -1,18 +1,17 @@
-from concurrent.futures import Future
 from pathlib import Path
-import concurrent.futures as futures
-from threading import Event
+from threading import Thread
 from time import sleep
 
 from ..library import classes
 from ..library import files
 
 
-test_path = Path("/Users/calebhair/Documents/Projects/BroadbandBug/broadbandbug/tests/resources")
+test_path = Path("./broadbandbug/tests/resources").absolute()
 
 
 # Test ensure_file_exists (abbreviated to efe)
 def test_efe_file_exists():
+    print(test_path / "existing_file.txt")
     # Test already existing files are recognised as such
     existing_file = test_path / "existing_file.txt"
     assert files.ensure_file_exists(existing_file, False)
@@ -58,31 +57,21 @@ def test_efe_dir_doesnt_exist():
             print("Could not delete dir.")
 
 
-# read_results is tested by plotting tests.
+# read_results is tested by plotting tests, which is tested manually.
 
 
 # Manual test - expect results_writer_test_file.csv to have stuff in resources dir
 def test_results_writer():
     results_writer_test_file = test_path / "results_writer_test_file.csv"
+    classes.BaseRecorder.csv_path = results_writer_test_file
     files.ensure_file_exists(results_writer_test_file, False)
 
     base_rec = classes.BaseRecorder("Results writer testing")
-    close_event = Event()
 
-    with futures.ThreadPoolExecutor(2) as threadpool_exe:
-        # Start writer
-        writer_future = threadpool_exe.submit(files.results_writer, results_writer_test_file, base_rec.get_results_queue(), close_event)
-        writer_future: Future  # Helping out PyCharm
+    # Start recording
+    thread = Thread(target=base_rec.recording_loop)
+    thread.start()
+    sleep(0.01)
 
-        # Start recording
-        base_rec.indicate_recorder_started(threadpool_exe)
-        sleep(0.01)
-
-        # Stop everything
-        base_rec.send_stop_signal()
-        close_event.set()
-
-        # Let writer finish
-        while writer_future.running():
-            print("Waiting...")
-            sleep(1)
+    # Stop everything
+    base_rec.send_stop_signal()
